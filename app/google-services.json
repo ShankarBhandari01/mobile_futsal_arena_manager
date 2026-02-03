@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1018569890430",
+    "project_id": "my-futsal-manager-project",
+    "storage_bucket": "my-futsal-manager-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018569890430:android:6ef0ba378656b8b09b562f",
+        "android_client_info": {
+          "package_name": "com.example.futsalmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNAe0YAc0gkvP93px-wd1Ttsglza2PYkg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
