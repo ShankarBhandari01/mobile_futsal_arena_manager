@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".FutsalApplication"
         android:allowBackup="true"
@@ -15,12 +15,7 @@
         android:theme="@style/Theme.FutsalManager"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".FutsalApplication"
-            android:exported="false"
-            android:label="@string/title_activity_futsal_application"
-            android:theme="@style/Theme.FutsalManager" />
-        <activity
-            android:name=".ui.login.MainActivity"
+            android:name=".ui.login.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.FutsalManager">
             <intent-filter>

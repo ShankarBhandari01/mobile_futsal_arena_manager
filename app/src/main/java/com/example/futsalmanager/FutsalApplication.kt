@@ -4,4 +4,10 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class FutsalApplication : Application()
+class FutsalApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+    }
+
+}

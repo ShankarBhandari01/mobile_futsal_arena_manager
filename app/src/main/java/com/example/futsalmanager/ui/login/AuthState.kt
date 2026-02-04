@@ -4,8 +4,8 @@ data class AuthState(
     val mode: AuthMode = AuthMode.LOGIN,
 
     // shared
-    val email: String = "",
-    val password: String = "",
+    val email: String = "iamshankarbhandari@gmail.com",
+    val password: String = "12345678",
 
     // register only
     val firstName: String = "",

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -17,23 +18,44 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
@@ -281,3 +303,99 @@ fun LoadingButton(
         }
     }
 }
+
+@Composable
+fun OtpInputField(
+    otpLength: Int = 6,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusRequesters = List(otpLength) { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        repeat(otpLength) { index ->
+            val char = value.getOrNull(index)?.toString() ?: ""
+
+            OutlinedTextField(
+                value = char,
+                onValueChange = { input ->
+                    val digit = input.filter { it.isDigit() }.take(1)
+                    if (digit.isNotEmpty() || char.isNotEmpty()) {
+                        val newValue = StringBuilder(value).apply {
+                            if (index < otpLength) {
+                                if (length > index) this[index] = digit.firstOrNull() ?: ' '
+                                else append(digit)
+                            }
+                        }.toString().trim()
+                        onValueChange(newValue)
+
+                        // Move forward if user typed
+                        if (digit.isNotEmpty() && index < otpLength - 1) {
+                            focusRequesters[index + 1].requestFocus()
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier
+                    .width(50.dp)
+                    .focusRequester(focusRequesters[index])
+                    .onKeyEvent { event ->
+                        // Handle backspace
+                        if (event.key == Key.Backspace) {
+                            if (char.isEmpty() && index > 0) {
+                                focusRequesters[index - 1].requestFocus()
+                            }
+                            true
+                        } else false
+                    },
+                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                shape = RoundedCornerShape(8.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = if (index == otpLength - 1) ImeAction.Done else ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { keyboardController?.hide() }
+                )
+            )
+        }
+    }
+}
+
+
+@Composable
+fun PasswordField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    Text(label, color = Color.Gray)
+    Spacer(Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        visualTransformation =
+            if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(
+                    if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    null
+                )
+            }
+        }
+    )
+}
+
+
+

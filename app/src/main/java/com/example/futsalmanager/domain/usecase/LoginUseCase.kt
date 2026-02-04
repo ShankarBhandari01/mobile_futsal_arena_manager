@@ -18,4 +18,9 @@ class LoginUseCase @Inject constructor(
     suspend fun getRefreshToken() = repo.getRefreshToken()
     val userFlow get() = repo.userFlow
 
+    suspend fun forgotPassword(email: String) = repo.forgotPassword(email)
+    suspend fun verifyEmail(email: String) = repo.verifyEmail(email)
+    suspend fun refresh() = repo.refresh()
+
+
 }

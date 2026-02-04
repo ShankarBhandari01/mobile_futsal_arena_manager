@@ -1,4 +1,4 @@
-package com.example.futsalmanager.ui.login
+package com.example.futsalmanager.ui.login.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,6 +6,12 @@ import com.example.futsalmanager.core.utils.Common.isValidEmail
 import com.example.futsalmanager.core.utils.Common.toRegisterRequest
 import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.domain.usecase.LoginUseCase
+import com.example.futsalmanager.ui.apiExceptions.ApiException
+import com.example.futsalmanager.ui.apiExceptions.ApiExceptionTypes
+import com.example.futsalmanager.ui.login.AuthEffect
+import com.example.futsalmanager.ui.login.AuthIntent
+import com.example.futsalmanager.ui.login.AuthMode
+import com.example.futsalmanager.ui.login.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,16 +25,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
+class LoginRegisterViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
 
-    val user: StateFlow<User?> = loginUseCase.userFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+    val user: StateFlow<User?> = loginUseCase.userFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     private val _state = MutableStateFlow(AuthState())
     val state = _state.asStateFlow()
@@ -40,41 +45,29 @@ class LoginViewModel @Inject constructor(
             AuthIntent.ToggleMode -> {
                 _state.update {
                     it.copy(
-                        mode = if (it.mode == AuthMode.LOGIN)
-                            AuthMode.REGISTER
-                        else
-                            AuthMode.LOGIN
+                        mode = if (it.mode == AuthMode.LOGIN) AuthMode.REGISTER
+                        else AuthMode.LOGIN
                     )
                 }
             }
 
-            is AuthIntent.EmailChanged ->
-                _state.update { it.copy(email = intent.email) }
+            is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.email) }
 
-            is AuthIntent.PasswordChanged ->
-                _state.update { it.copy(password = intent.password) }
+            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.password) }
 
-            is AuthIntent.FirstNameChanged ->
-                _state.update { it.copy(firstName = intent.firstname) }
+            is AuthIntent.FirstNameChanged -> _state.update { it.copy(firstName = intent.firstname) }
 
-            is AuthIntent.LastNameChanged ->
-                _state.update { it.copy(lastName = intent.lastname) }
+            is AuthIntent.LastNameChanged -> _state.update { it.copy(lastName = intent.lastname) }
 
-            is AuthIntent.ConfirmPasswordChanged ->
-                _state.update { it.copy(confirmPassword = intent.confirmPassword) }
+            is AuthIntent.ConfirmPasswordChanged -> _state.update { it.copy(confirmPassword = intent.confirmPassword) }
 
-            is AuthIntent.PhoneChanged ->
-                _state.update { it.copy(phone = intent.phone) }
+            is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.phone) }
 
+            AuthIntent.SubmitClicked -> submit()
 
-            AuthIntent.SubmitClicked ->
-                submit()
-
-            AuthIntent.ForgotPasswordClicked ->
-                viewModelScope.launch {
-                    _effect.send(AuthEffect.ShowError("Not implemented yet"))
-                }
-
+            AuthIntent.ForgotPasswordClicked -> viewModelScope.launch {
+                _effect.send(AuthEffect.NavigateToForgotPassword)
+            }
         }
     }
 
@@ -107,23 +100,38 @@ class LoginViewModel @Inject constructor(
             return@launch
         } else if (current.password != current.confirmPassword) {
             _effect.send(AuthEffect.ShowError("Passwords do not match"))
+            return@launch
         }
         _state.update { it.copy(loading = true) }
 
         try {
             val request = current.toRegisterRequest()
-            loginUseCase.register(request).fold(
-                onSuccess = {
-                    _effect.send(AuthEffect.Navigate)
-                },
-                onFailure = {
-                    _effect.send(
-                        AuthEffect.ShowError(
-                            it.message ?: "Registration failed"
-                        )
-                    )
+            loginUseCase.register(request).fold(onSuccess = {
+                _effect.send(AuthEffect.Navigate)
+            }, onFailure = { throwable ->
+                if (throwable is ApiException) {
+                    when (throwable.type) {
+                        ApiExceptionTypes.EMAIL_NOT_VERIFIED -> {
+                            _effect.send(AuthEffect.NavigateToEmailVerification)
+                            //_effect.send(AuthEffect.ShowError(throwable.message))
+                        }
+
+                        ApiExceptionTypes.INVALID_CREDENTIALS -> {
+                            _effect.send(AuthEffect.ShowError(throwable.message))
+                        }
+
+                        ApiExceptionTypes.CONFLICT -> {
+                            _effect.send(AuthEffect.ShowError(throwable.message))
+                        }
+
+                        null -> {
+                            _effect.send(AuthEffect.ShowError(throwable.message))
+                        }
+                    }
+                } else {
+                    _effect.send(AuthEffect.ShowError(throwable.message ?: "Unknown error"))
                 }
-            )
+            })
         } catch (e: Exception) {
             _effect.send(AuthEffect.ShowError(e.message ?: "Registration failed"))
         } finally {
@@ -145,14 +153,32 @@ class LoginViewModel @Inject constructor(
         _state.update { it.copy(loading = true) }
 
         try {
-            loginUseCase(current.email, current.password).fold(
+            loginUseCase(
+                current.email,
+                current.password
+            ).fold(
                 onSuccess = { _effect.send(AuthEffect.Navigate) },
-                onFailure = {
-                    _effect.send(
-                        AuthEffect.ShowError(
-                            it.message ?: "Login failed"
-                        )
-                    )
+                onFailure = { throwable ->
+                    if (throwable is ApiException) {
+                        when (throwable.type) {
+                            ApiExceptionTypes.EMAIL_NOT_VERIFIED -> {
+                                _effect.send(AuthEffect.ShowError(throwable.message))
+                                _effect.send(AuthEffect.NavigateToEmailVerification)
+                            }
+
+                            ApiExceptionTypes.INVALID_CREDENTIALS -> {
+                                _effect.send(AuthEffect.ShowError(throwable.message))
+                            }
+
+                            null -> {
+                                _effect.send(AuthEffect.ShowError(throwable.message))
+                            }
+
+                            else -> {}
+                        }
+                    } else {
+                        _effect.send(AuthEffect.ShowError(throwable.message ?: "Unknown error"))
+                    }
                 }
             )
         } catch (e: Exception) {
@@ -161,6 +187,7 @@ class LoginViewModel @Inject constructor(
             _state.update { it.copy(loading = false) }
         }
     }
+
 
     fun logout() {
         viewModelScope.launch {

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
-
 private const val AUTH_PREF = "auth_pref"
 
 private val Context.authDataStore by preferencesDataStore(AUTH_PREF)

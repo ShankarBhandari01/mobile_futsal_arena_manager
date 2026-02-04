@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Futsal Manager</string>
     <string name="title_activity_futsal_application">FutsalApplication</string>
+    <string name="title_activity_email_verification">EmailVerificationActivity</string>
+
+
 </resources>

@@ -11,7 +11,6 @@ sealed interface AuthIntent {
     data class ConfirmPasswordChanged(val confirmPassword: String) : AuthIntent
     data class PhoneChanged(val phone: String) : AuthIntent
 
-
     data object SubmitClicked : AuthIntent
 
     data object ForgotPasswordClicked : AuthIntent

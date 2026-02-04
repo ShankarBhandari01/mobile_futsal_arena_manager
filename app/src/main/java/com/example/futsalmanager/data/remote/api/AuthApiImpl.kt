@@ -34,6 +34,24 @@ class AuthApiImpl(
     }
 
     override suspend fun logout(): Result<Unit> {
+        return safeApiCall {
+            client.post(ApiRegistry.LOGOUT)
+        }
+    }
+
+    override suspend fun refresh(): Result<LoginResponse> {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun forgotPassword(email: String): Result<Unit> {
+        return safeApiCall {
+            client.post(ApiRegistry.FORGOT_PASSWORD)
+        }
+    }
+
+    override suspend fun verifyEmail(email: String): Result<Unit> {
+        return safeApiCall {
+            client.post(ApiRegistry.VERIFY_EMAIL)
+        }
     }
 }

@@ -29,12 +29,31 @@ class AuthRepositoryImpl @Inject constructor(
 
     override val userFlow: Flow<User?> get() = sessionStorage.userFlow
 
+    override suspend fun logout(): Result<Unit> {
+        return api.logout()
+    }
+
+    override suspend fun refresh(): Result<LoginResponse> {
+        return api.refresh()
+    }
+
+    override suspend fun forgotPassword(email: String): Result<Unit> {
+        return api.forgotPassword(email)
+    }
+
+    override suspend fun verifyEmail(email: String): Result<Unit> {
+        return api.verifyEmail(email)
+    }
+
     override suspend fun getAccessToken(): String? = sessionStorage.getAccessToken()
 
     override suspend fun getRefreshToken() =
         sessionStorage.getRefreshToken()
 
-    override suspend fun clear() =
+    override suspend fun clear() {
         sessionStorage.clear()
+        this.logout()
+    }
+
 
 }

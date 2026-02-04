@@ -2,6 +2,8 @@ package com.example.futsalmanager.data.remote.safe
 
 import android.util.Log
 import com.example.futsalmanager.data.remote.dto.ApiError
+import com.example.futsalmanager.ui.apiExceptions.ApiException
+import com.example.futsalmanager.ui.apiExceptions.ApiExceptionTypes
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.statement.bodyAsText
@@ -17,23 +19,22 @@ suspend inline fun <T> safeApiCall(
         val errorMessage = try {
             val text = e.response.bodyAsText()
             val apiError = Json.decodeFromString<ApiError>(text)
-            apiError.message
-
+            apiError
         } catch (ex: Exception) {
-            e.localizedMessage ?: "Client request error"
+            ApiError(error = "UNKNOWN", message = e.localizedMessage ?: "Client error")
         }
-        Result.failure(Exception(errorMessage))
+        val type = try {
+            ApiExceptionTypes.valueOf(errorMessage.error)
+        } catch (ex: Exception) {
+            null
+        }
+        Result.failure(ApiException(errorMessage.message, type))
     } catch (e: ServerResponseException) { // 5xx
-        val errorMessage = try {
-            e.response.bodyAsText()
-        } catch (ex: Exception) {
-            e.localizedMessage ?: "Server response error"
-        }
-        Result.failure(Exception(errorMessage))
+        Result.failure(ApiException("Server error: ${e.response.status}", null))
     } catch (e: IOException) {
         Log.e("safeApiCall", "IOException", e.fillInStackTrace())
-        Result.failure(Exception(e.localizedMessage ?: "Network error"))
+        Result.failure(ApiException("Network error: ${e.localizedMessage}", null))
     } catch (e: Exception) {
-        Result.failure(e)
+        Result.failure(ApiException(e.localizedMessage ?: "Unknown error", null))
     }
 }

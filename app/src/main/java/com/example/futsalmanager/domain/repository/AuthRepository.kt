@@ -16,4 +16,9 @@ interface AuthRepository {
     suspend fun clear()
 
     val userFlow: Flow<User?>
+
+    suspend fun logout(): Result<Unit>
+    suspend fun refresh(): Result<LoginResponse>
+    suspend fun forgotPassword(email: String): Result<Unit>
+    suspend fun verifyEmail(email: String): Result<Unit>
 }
