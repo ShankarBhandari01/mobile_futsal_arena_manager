@@ -1,9 +1,11 @@
 package com.example.futsalmanager.data.repository
 
 import com.example.futsalmanager.data.remote.api.AuthApi
+import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.LoginResponse
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.data.remote.dto.RegisterResponse
+import com.example.futsalmanager.data.remote.dto.ResetCodeResponse
 import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.domain.repository.AuthRepository
 import com.example.futsalmanager.domain.session.SessionStorage
@@ -37,12 +39,16 @@ class AuthRepositoryImpl @Inject constructor(
         return api.refresh()
     }
 
-    override suspend fun forgotPassword(email: String): Result<Unit> {
+    override suspend fun forgotPassword(email: String): Result<ResetCodeResponse> {
         return api.forgotPassword(email)
     }
 
-    override suspend fun verifyEmail(email: String): Result<Unit> {
-        return api.verifyEmail(email)
+    override suspend fun resetPassword(changePasswordRequest: ChangePasswordRequest): Result<Unit> {
+        return api.resetPassword(changePasswordRequest)
+    }
+
+    override suspend fun verifyEmail(email: String,otp:String): Result<Unit> {
+        return api.verifyEmail(email,otp)
     }
 
     override suspend fun getAccessToken(): String? = sessionStorage.getAccessToken()
@@ -54,6 +60,5 @@ class AuthRepositoryImpl @Inject constructor(
         sessionStorage.clear()
         this.logout()
     }
-
 
 }

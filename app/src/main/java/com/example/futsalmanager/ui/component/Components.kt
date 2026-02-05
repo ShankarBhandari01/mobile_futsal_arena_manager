@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,17 +22,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,7 +62,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
@@ -62,7 +79,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.futsalmanager.R
+import com.example.futsalmanager.core.utils.Common.shimmerEffect
+import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.login.AuthMode
+import com.example.futsalmanager.ui.theme.BrandGreen
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ToggleButton(
@@ -185,7 +211,10 @@ private fun TermsPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun LabelPreview() {
-    TextLabel("EMAIL")
+    OtpInputField(
+        value = "",
+        onValueChange = {}
+    )
 }
 
 @Composable
@@ -269,7 +298,8 @@ fun LoadingButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     containerColor: Color = Color.Green, // default green
-    contentColor: Color = Color.White
+    contentColor: Color = Color.White,
+    icon: (@Composable () -> Unit)? = null
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -299,6 +329,8 @@ fun LoadingButton(
                 Text("Loading...")
             }
         } else {
+            icon?.invoke()
+            Spacer(Modifier.width(8.dp))
             Text(text, fontWeight = FontWeight.Bold)
         }
     }
@@ -316,7 +348,8 @@ fun OtpInputField(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         repeat(otpLength) { index ->
             val char = value.getOrNull(index)?.toString() ?: ""
@@ -343,7 +376,9 @@ fun OtpInputField(
                 singleLine = true,
                 modifier = Modifier
                     .width(50.dp)
+                    .padding(horizontal = 1.dp)
                     .focusRequester(focusRequesters[index])
+                    .align(Alignment.CenterVertically)
                     .onKeyEvent { event ->
                         // Handle backspace
                         if (event.key == Key.Backspace) {
@@ -397,5 +432,259 @@ fun PasswordField(
     )
 }
 
+@Composable
+fun ArenaCard(
+    arenas: Arenas,
+    onItemClick: () -> Unit = {}
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            Color.Black
+        ) // Explicit black border
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            // --- TOP SECTION: Image and Titles ---
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Arena Thumbnail
+                AsyncImage(
+                    model = arenas.logoUrl,
+                    contentDescription = "Thumbnail of ${arenas.name}",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.reshot),
+                    error = painterResource(R.drawable.reshot)
+                )
 
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = arenas.name!!,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = arenas.id!!,
+                            fontSize = 14.sp,
+                            softWrap = false,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // --- MIDDLE SECTION: Location ---
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = arenas.address!!,
+                    fontSize = 16.sp,
+                    softWrap = false,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Clip,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- BOTTOM SECTION: Action Link ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "View Courts",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable(
+                            onClick = onItemClick
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ArenaCardPreview() {
+    //ArenaCard(arenas = Arenas())
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FutsalDatePickerPreview() {
+    FutsalDatePickerField()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FutsalDatePickerField(
+    modifier: Modifier = Modifier,
+    onDateSelected: (Long?) -> Unit = {}
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val selectableDates = remember {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis >= System.currentTimeMillis() - (24 * 60 * 60 * 1000)
+            }
+
+            override fun isSelectableYear(year: Int): Boolean {
+                return year >= Calendar.getInstance().get(Calendar.YEAR)
+            }
+        }
+    }
+
+    val datePickerState = rememberDatePickerState(
+        selectableDates = selectableDates
+    )
+
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        sdf.format(Date(it))
+    } ?: ""
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = selectedDate,
+            onValueChange = {
+
+            },
+            readOnly = true,
+            placeholder = { Text("Pick a date") },
+            leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = Color.Black,
+                disabledBorderColor = Color.LightGray,
+                disabledLeadingIconColor = Color.Gray,
+                disabledPlaceholderColor = Color.Gray
+            )
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { showDatePicker = true }
+        )
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDateSelected(datePickerState.selectedDateMillis)
+                        showDatePicker = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = BrandGreen)
+                ) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            },
+            colors = DatePickerDefaults.colors(containerColor = Color.White)
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = BrandGreen,
+                    selectedDayContentColor = Color.White,
+                    todayContentColor = BrandGreen,
+                    todayDateBorderColor = BrandGreen
+                )
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ArenaShimmerItem() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Thumbnail Shimmer
+        Box(modifier = Modifier
+            .size(80.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .shimmerEffect())
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            // Title Shimmer
+            Box(modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(20.dp)
+                .shimmerEffect())
+            Spacer(modifier = Modifier.height(8.dp))
+            // Subtitle Shimmer
+            Box(modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .height(14.dp)
+                .shimmerEffect())
+        }
+    }
+}
 

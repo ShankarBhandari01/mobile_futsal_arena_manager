@@ -1,24 +1,13 @@
 package com.example.futsalmanager.domain.repository
 
-import com.example.futsalmanager.data.remote.dto.LoginResponse
-import com.example.futsalmanager.data.remote.dto.RegisterRequest
-import com.example.futsalmanager.data.remote.dto.RegisterResponse
+import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
-interface AuthRepository {
-    suspend fun login(email: String, password: String): Result<LoginResponse>
-    suspend fun register(registerRequest: RegisterRequest): Result<RegisterResponse>
+interface AuthRepository : AuthApi {
+    // data store apis
     suspend fun getAccessToken(): String?
-
     suspend fun getRefreshToken(): String?
-
     suspend fun clear()
-
     val userFlow: Flow<User?>
-
-    suspend fun logout(): Result<Unit>
-    suspend fun refresh(): Result<LoginResponse>
-    suspend fun forgotPassword(email: String): Result<Unit>
-    suspend fun verifyEmail(email: String): Result<Unit>
 }

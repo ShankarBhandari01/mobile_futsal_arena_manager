@@ -1,10 +1,10 @@
 package com.example.futsalmanager.data.di
 
 import com.example.futsalmanager.data.remote.api.AuthApi
-import com.example.futsalmanager.data.remote.api.AuthApiImpl
+import com.example.futsalmanager.data.remote.api.HomeApi
+import com.example.futsalmanager.data.remote.api.impl.AuthApiImpl
+import com.example.futsalmanager.data.remote.api.impl.HomeApiImpl
 import com.example.futsalmanager.data.remote.client.HttpClientFactory
-import com.example.futsalmanager.data.repository.AuthRepositoryImpl
-import com.example.futsalmanager.domain.repository.AuthRepository
 import com.example.futsalmanager.domain.session.SessionStorage
 import dagger.Binds
 import dagger.Module
@@ -17,19 +17,24 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+abstract class NetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideHttpClient(
-        sessionStorage: SessionStorage
-    ): HttpClient {
-        return HttpClientFactory.create {
-            runBlocking { sessionStorage.getAccessToken() }
+    companion object {
+        @Provides
+        @Singleton
+        fun provideHttpClient(sessionStorage: SessionStorage): HttpClient {
+            return HttpClientFactory.create {
+                runBlocking { sessionStorage.getAccessToken() }
+            }
         }
     }
 
-    @Provides
-    fun provideAuthApi(client: HttpClient): AuthApi = AuthApiImpl(client)
+    @Binds
+    @Singleton
+    abstract fun bindAuthApi(impl: AuthApiImpl): AuthApi
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeApi(impl: HomeApiImpl): HomeApi
 
 }

@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.TextLabel
 import com.example.futsalmanager.ui.login.viewmodels.ForgetPasswordViewModel
@@ -186,17 +187,22 @@ fun ForgetPasswordScreen(
 fun ForgotPasswordScreenRoute(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
-    onSubmitted: () -> Unit
+    onSubmitted: (email: String) -> Unit
 ) {
     val viewModel = hiltViewModel<ForgetPasswordViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { e ->
-            when (e) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
                 is ForgetPasswordEffect.OnBackClicked -> onBack()
-                ForgetPasswordEffect.Navigate -> onSubmitted()
-                is ForgetPasswordEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+                is ForgetPasswordEffect.NavigateToOtp -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                    onSubmitted(effect.email)
+                }
+
+                is ForgetPasswordEffect.ShowError ->
+                    snackbarHostState.showSnackbar(effect.message)
             }
         }
     }

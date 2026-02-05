@@ -1,14 +1,17 @@
 package com.example.futsalmanager.data.remote.api
 
+import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.LoginResponse
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.data.remote.dto.RegisterResponse
+import com.example.futsalmanager.data.remote.dto.ResetCodeResponse
 
 interface AuthApi {
-    suspend fun login(email: String, password: String): Result<LoginResponse>
     suspend fun register(registerRequest: RegisterRequest): Result<RegisterResponse>
-    suspend fun logout(): Result<Unit>
+    suspend fun verifyEmail(email: String,otp:String): Result<Unit>
+    suspend fun login(email: String, password: String): Result<LoginResponse>
     suspend fun refresh(): Result<LoginResponse>
-    suspend fun forgotPassword(email: String): Result<Unit>
-    suspend fun verifyEmail(email: String): Result<Unit>
+    suspend fun logout(): Result<Unit>
+    suspend fun forgotPassword(email: String): Result<ResetCodeResponse>
+    suspend fun resetPassword(changePasswordRequest: ChangePasswordRequest): Result<Unit>
 }

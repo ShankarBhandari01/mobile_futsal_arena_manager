@@ -8,17 +8,20 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.futsalmanager.data.remote.dto.LoginResponse
 import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.domain.session.SessionStorage
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
+
 private const val AUTH_PREF = "auth_pref"
 
 private val Context.authDataStore by preferencesDataStore(AUTH_PREF)
 
-class SessionDataStore(
-    context: Context,
+class SessionDataStore @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val json: Json,
 ) : SessionStorage {
 

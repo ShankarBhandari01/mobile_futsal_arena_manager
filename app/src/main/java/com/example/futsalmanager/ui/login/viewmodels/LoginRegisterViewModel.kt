@@ -12,6 +12,7 @@ import com.example.futsalmanager.ui.login.AuthEffect
 import com.example.futsalmanager.ui.login.AuthIntent
 import com.example.futsalmanager.ui.login.AuthMode
 import com.example.futsalmanager.ui.login.AuthState
+import com.example.futsalmanager.ui.routes.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,25 @@ import javax.inject.Inject
 class LoginRegisterViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
+    // for splash screen
+    private val _isReady = MutableStateFlow(false)
+    val isReady = _isReady.asStateFlow()
+
+    private val _startDestination = MutableStateFlow<String?>(null)
+    val startDestination = _startDestination.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val token = loginUseCase.getAccessToken()
+            _startDestination.value = if (token != null) {
+                Routes.HOME_SCREEN
+            } else {
+                Routes.LOGIN_SCREEN
+            }
+            _isReady.value = true
+        }
+    }
+
 
     val user: StateFlow<User?> = loginUseCase.userFlow.stateIn(
         scope = viewModelScope,
@@ -125,6 +145,10 @@ class LoginRegisterViewModel @Inject constructor(
                         }
 
                         null -> {
+                            _effect.send(AuthEffect.ShowError(throwable.message))
+                        }
+
+                        else -> {
                             _effect.send(AuthEffect.ShowError(throwable.message))
                         }
                     }

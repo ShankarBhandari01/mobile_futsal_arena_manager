@@ -2,6 +2,7 @@ package com.example.futsalmanager.ui.login.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.futsalmanager.core.utils.Common.isValidEmail
 import com.example.futsalmanager.domain.usecase.LoginUseCase
 import com.example.futsalmanager.ui.login.email_verification.EmailVerificationEffect
 import com.example.futsalmanager.ui.login.email_verification.EmailVerificationIntent
@@ -42,10 +43,25 @@ class EmailVerificationViewModel @Inject constructor(
         if (current.email.isBlank()) {
             _effect.send(EmailVerificationEffect.ShowError("Email cannot be empty"))
             return@launch
+        } else if (!current.email.isValidEmail()) {
+            _effect.send(EmailVerificationEffect.ShowError("Invalid email"))
+            return@launch
+        } else if (current.code.isBlank()) {
+            _effect.send(EmailVerificationEffect.ShowError("Code cannot be empty"))
+            return@launch
+        } else if (current.code.length != 6) {
+            _effect.send(EmailVerificationEffect.ShowError("Invalid code"))
+            return@launch
         }
         _state.update { it.copy(loading = true) }
         try {
-
+            loginUseCase.verifyEmail(current.email, current.code).fold(
+                onSuccess = {
+                    _effect.send(EmailVerificationEffect.Navigate)
+                }, onFailure = {
+                    _effect.send(EmailVerificationEffect.ShowError(it.message ?: "Unknown error"))
+                }
+            )
         } catch (e: Exception) {
             _effect.send(EmailVerificationEffect.ShowError(e.message ?: "Unknown error"))
         } finally {

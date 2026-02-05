@@ -10,7 +10,10 @@ object ApiRegistry {
     const val REFRESH = "auth/refresh"
 
     const val FORGOT_PASSWORD = "auth/forgot-password"
+    const val RESET_PASSWORD = "auth/reset-password"
     const val VERIFY_EMAIL = "auth/verify-email"
 
+    // home api
+    const val ARENA_LIST = "discover/arenas"
 
 }

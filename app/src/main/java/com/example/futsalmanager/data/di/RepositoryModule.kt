@@ -1,23 +1,28 @@
 package com.example.futsalmanager.data.di
 
-import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.repository.AuthRepositoryImpl
+import com.example.futsalmanager.data.repository.HomeRepositoryImpl
 import com.example.futsalmanager.domain.repository.AuthRepository
-import com.example.futsalmanager.domain.session.SessionStorage
+import com.example.futsalmanager.domain.repository.HomeRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
 
+    @Binds
     @Singleton
-    @Provides
-    fun provideAuthRepository(
-        sessionStorage: SessionStorage,
-        api: AuthApi
-    ): AuthRepository = AuthRepositoryImpl(api, sessionStorage)
+    abstract fun bindAuthRepository(
+        authRepositoryImpl: AuthRepositoryImpl
+    ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeRepository(
+        homeRepositoryImpl: HomeRepositoryImpl
+    ): HomeRepository
 }

@@ -49,6 +49,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.compose.material.icons)
     implementation("com.google.dagger:hilt-android:2.59")
@@ -84,6 +86,9 @@ dependencies {
 
     implementation(libs.firebase.crashlytics)
 
+    testImplementation("io.mockk:mockk:1.14.9")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation("app.cash.turbine:turbine:1.2.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
