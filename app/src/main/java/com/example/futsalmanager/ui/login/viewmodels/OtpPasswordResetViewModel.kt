@@ -24,6 +24,7 @@ class OtpPasswordResetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
+    // getting value from navigation
     private val email = savedStateHandle.get<String>("email") ?: ""
 
     private val _state = MutableStateFlow(OtpPasswordResetState(email = email))

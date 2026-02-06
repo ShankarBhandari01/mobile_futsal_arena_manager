@@ -1,9 +1,11 @@
 package com.example.futsalmanager.data.di
 
+import com.example.futsalmanager.data.location.LocationServiceImpl
 import com.example.futsalmanager.data.repository.AuthRepositoryImpl
 import com.example.futsalmanager.data.repository.HomeRepositoryImpl
 import com.example.futsalmanager.domain.repository.AuthRepository
 import com.example.futsalmanager.domain.repository.HomeRepository
+import com.example.futsalmanager.domain.repository.LocationRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindHomeRepository(
         homeRepositoryImpl: HomeRepositoryImpl
     ): HomeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationRepository(
+        locationServiceImpl: LocationServiceImpl
+    ): LocationRepository
 }

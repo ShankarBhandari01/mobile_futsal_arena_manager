@@ -8,4 +8,5 @@ sealed interface HomeIntent {
     object MyProfileClicked : HomeIntent
     object LogoutClicked : HomeIntent
     object Refresh : HomeIntent
+    object EnableLocationClicked : HomeIntent
 }

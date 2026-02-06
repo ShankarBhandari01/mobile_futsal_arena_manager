@@ -1,10 +1,13 @@
 package com.example.futsalmanager.ui
 
 import FutsalHomeScreenRoute
+import android.app.Activity.RESULT_OK
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -43,6 +46,7 @@ class RootAppActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition {
             !viewModel.isReady.value
         }
+
         enableEdgeToEdge()
         setContent {
             FutsalManagerTheme {
@@ -54,8 +58,10 @@ class RootAppActivity : ComponentActivity() {
 
 @Composable
 fun AppRoot() {
+
     val viewModel = hiltViewModel<LoginRegisterViewModel>()
     val startDest by viewModel.startDestination.collectAsStateWithLifecycle()
+
     startDest?.let { destination ->
 
         val navController = rememberNavController()

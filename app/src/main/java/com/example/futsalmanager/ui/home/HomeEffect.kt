@@ -6,5 +6,6 @@ sealed interface HomeEffect {
     object NavigateToMyBooking : HomeEffect
     object NavigateToMyProfile : HomeEffect
     object NavigateToLogin : HomeEffect
+    object NavigateToLocationSettings : HomeEffect
 }
 

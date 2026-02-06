@@ -1,5 +1,7 @@
 package com.example.futsalmanager.core.utils
 
+import android.app.Activity
+import android.content.IntentSender
 import android.util.Patterns
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -18,6 +20,12 @@ import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.ui.login.AuthState
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetState
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.location.SettingsClient
 
 object Common {
 
@@ -70,4 +78,7 @@ object Common {
         )
         background(brush)
     }
+
+
+
 }

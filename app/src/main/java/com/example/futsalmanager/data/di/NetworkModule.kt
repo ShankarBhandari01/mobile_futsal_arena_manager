@@ -1,15 +1,19 @@
 package com.example.futsalmanager.data.di
 
+import android.content.Context
 import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.remote.api.HomeApi
 import com.example.futsalmanager.data.remote.api.impl.AuthApiImpl
 import com.example.futsalmanager.data.remote.api.impl.HomeApiImpl
 import com.example.futsalmanager.data.remote.client.HttpClientFactory
 import com.example.futsalmanager.domain.session.SessionStorage
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
@@ -26,6 +30,14 @@ abstract class NetworkModule {
             return HttpClientFactory.create {
                 runBlocking { sessionStorage.getAccessToken() }
             }
+        }
+
+        @Provides
+        @Singleton
+        fun provideFusedLocationProviderClient(
+            @ApplicationContext context: Context
+        ): FusedLocationProviderClient {
+            return LocationServices.getFusedLocationProviderClient(context)
         }
     }
 

@@ -435,7 +435,7 @@ fun PasswordField(
 @Composable
 fun ArenaCard(
     arenas: Arenas,
-    onItemClick: () -> Unit = {}
+    onItemClick: (Arenas) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -546,7 +546,7 @@ fun ArenaCard(
                     modifier = Modifier
                         .size(20.dp)
                         .clickable(
-                            onClick = onItemClick
+                            onClick = { onItemClick(arenas) }
                         )
                 )
             }
@@ -665,25 +665,31 @@ fun ArenaShimmerItem() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Thumbnail Shimmer
-        Box(modifier = Modifier
-            .size(80.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .shimmerEffect())
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .shimmerEffect()
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             // Title Shimmer
-            Box(modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .height(20.dp)
-                .shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(20.dp)
+                    .shimmerEffect()
+            )
             Spacer(modifier = Modifier.height(8.dp))
             // Subtitle Shimmer
-            Box(modifier = Modifier
-                .fillMaxWidth(0.5f)
-                .height(14.dp)
-                .shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(14.dp)
+                    .shimmerEffect()
+            )
         }
     }
 }

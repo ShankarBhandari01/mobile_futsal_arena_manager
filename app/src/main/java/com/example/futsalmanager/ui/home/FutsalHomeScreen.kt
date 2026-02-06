@@ -1,3 +1,7 @@
+import android.Manifest
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_YES
@@ -53,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.futsalmanager.core.utils.LocationUtils.launchLocationSettingsResolution
 import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.component.ArenaCard
 import com.example.futsalmanager.ui.component.ArenaShimmerItem
@@ -66,17 +72,44 @@ import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
 import com.example.futsalmanager.ui.theme.OrangeText
 import com.example.futsalmanager.ui.theme.WarningYellowBG
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun FutsalHomeScreenRoute(
     snackbarHostState: SnackbarHostState,
 ) {
     val viewmodel = hiltViewModel<HomeViewModel>()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val state by viewmodel.state.collectAsStateWithLifecycle()
 
+    val settingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            scope.launch {
+                viewmodel.updateLocationState()
+            }
+        }
+    }
+
+
+
+    val permissionState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    )
+
     LaunchedEffect(Unit) {
+
+        permissionState.launchMultiplePermissionRequest()
+
         viewmodel.effect.collect { e ->
             when (e) {
                 is HomeEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
@@ -95,6 +128,10 @@ fun FutsalHomeScreenRoute(
                 is HomeEffect.NavigateToLogin -> {
                     // Handle navigation
                 }
+
+                is HomeEffect.NavigateToLocationSettings -> {
+                    launchLocationSettingsResolution(context, settingsLauncher)
+                }
             }
         }
     }
@@ -102,6 +139,12 @@ fun FutsalHomeScreenRoute(
         state = state,
         onIntent = viewmodel::dispatch
     )
+
+    if (permissionState.allPermissionsGranted) {
+        // Collect location and show the map/list
+        val location by viewmodel.location.collectAsStateWithLifecycle()
+        Text(text = "Your location: ${location.latitude}, ${location.longitude}")
+    }
 }
 
 
@@ -285,43 +328,50 @@ fun FutsalHomeScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    // Location Warning Banner
-                    Surface(
-                        color = WarningYellowBG,
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFF1B8)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.LocationOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "Enable location to see nearby arenas first",
-                                modifier = Modifier.weight(1f),
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = "Enable",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .clickable {
+                    if (!state.isLocationEnabled) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        // Location Warning Banner
+                        Surface(
+                            color = WarningYellowBG,
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                Color(0xFFFFF1B8)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.LocationOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Enable location to see nearby arenas first",
+                                    modifier = Modifier.weight(1f),
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Enable",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                        .padding(start = 8.dp)
+                                        .clickable {
+                                            onIntent(HomeIntent.EnableLocationClicked)
+                                        }
 
-                                    }
-
-                            )
+                                )
+                            }
                         }
                     }
+
                 }
 
                 item {

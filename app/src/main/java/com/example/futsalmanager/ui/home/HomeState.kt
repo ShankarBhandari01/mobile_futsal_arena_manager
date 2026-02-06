@@ -8,5 +8,7 @@ data class HomeState(
     val date: String = "",
     val arenaList: List<Arenas>? = emptyList(),
     val offset: Int = 0,
-    val limit: Int = 10
+    val limit: Int = 10,
+    val isLocationEnabled: Boolean = false,
+    val isUsingHighAccuracy: Boolean = false
 )

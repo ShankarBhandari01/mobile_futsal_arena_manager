@@ -2,6 +2,7 @@ package com.example.futsalmanager.ui.home.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.usecase.HomeUseCase
 import com.example.futsalmanager.ui.home.HomeEffect
 import com.example.futsalmanager.ui.home.HomeIntent
@@ -10,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +29,11 @@ class HomeViewModel @Inject constructor(
     private val useCase: HomeUseCase
 ) : ViewModel() {
 
+    val location = useCase.userLocation.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = LocationModel(0.0, 0.0)
+    )
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
 
@@ -34,6 +42,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeSearchAndFilters()
+        updateLocationState()
     }
 
 
@@ -50,7 +59,7 @@ class HomeViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun dispatch(intent: HomeIntent) {
+    fun dispatch(intent: HomeIntent) = viewModelScope.launch {
         when (intent) {
             is HomeIntent.SearchChanged -> {
                 _state.update { it.copy(search = intent.query, offset = 0) }
@@ -64,10 +73,11 @@ class HomeViewModel @Inject constructor(
                 loadArenaList(_state.value.search, _state.value.date)
             }
 
-            HomeIntent.MarketPlaceClicked -> _effect.trySend(HomeEffect.NavigateToMarketPlace)
-            HomeIntent.MyBookingClicked -> _effect.trySend(HomeEffect.NavigateToMyBooking)
-            HomeIntent.MyProfileClicked -> _effect.trySend(HomeEffect.NavigateToMyProfile)
-            HomeIntent.LogoutClicked -> _effect.trySend(HomeEffect.NavigateToLogin)
+            HomeIntent.MarketPlaceClicked -> _effect.send(HomeEffect.NavigateToMarketPlace)
+            HomeIntent.MyBookingClicked -> _effect.send(HomeEffect.NavigateToMyBooking)
+            HomeIntent.MyProfileClicked -> _effect.send(HomeEffect.NavigateToMyProfile)
+            HomeIntent.LogoutClicked -> _effect.send(HomeEffect.NavigateToLogin)
+            HomeIntent.EnableLocationClicked -> _effect.send(HomeEffect.NavigateToLocationSettings)
         }
     }
 
@@ -88,5 +98,14 @@ class HomeViewModel @Inject constructor(
             }
         )
         _state.update { it.copy(isLoading = false) }
+    }
+
+    fun updateLocationState() {
+        _state.update {
+            it.copy(
+                isLocationEnabled = useCase.isLocationEnable,
+                isUsingHighAccuracy = useCase.isGpsEnable
+            )
+        }
     }
 }

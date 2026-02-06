@@ -49,11 +49,15 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-splashscreen:1.2.0")
+    //permission
+    implementation(libs.accompanist.permissions)
+    // Play Services for Location
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.core.splashscreen)
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.compose.material.icons)
-    implementation("com.google.dagger:hilt-android:2.59")
+    implementation(libs.hilt.android)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.foundation.layout)
@@ -64,7 +68,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("androidx.hilt:hilt-compiler:1.3.0")
 
-    implementation (libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.preferences)
     implementation("androidx.security:security-crypto:1.1.0")
 
     implementation(libs.ktor.client.core)

@@ -1,7 +1,9 @@
 package com.example.futsalmanager.domain.usecase
 
+import android.location.Location
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.repository.HomeRepository
+import com.example.futsalmanager.domain.repository.LocationRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -9,7 +11,8 @@ import javax.inject.Singleton
 
 @Singleton
 class HomeUseCase @Inject constructor(
-    private val repo: HomeRepository
+    private val repo: HomeRepository,
+    location: LocationRepository
 ) {
     suspend fun getArenaList(
         search: String,
@@ -44,4 +47,24 @@ class HomeUseCase @Inject constructor(
             dateStr // Fallback to original
         }
     }
+
+    val userLocation = location.getLiveLocation()
+
+    fun calculateDistance(
+        userLat: Double, userLon: Double,
+        arenaLat: Double, arenaLon: Double
+    ): Float {
+        val results = FloatArray(1)
+
+        Location.distanceBetween(
+            userLat,
+            userLon,
+            arenaLat,
+            arenaLon, results
+        )
+        return results[0] / 1000 // Convert meters to Kilometers
+    }
+
+    val isLocationEnable = location.checkLocationStatus()
+    val isGpsEnable = location.checkGpsStatus()
 }
