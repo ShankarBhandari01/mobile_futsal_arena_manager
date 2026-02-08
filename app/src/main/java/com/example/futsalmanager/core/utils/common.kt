@@ -1,7 +1,5 @@
 package com.example.futsalmanager.core.utils
 
-import android.app.Activity
-import android.content.IntentSender
 import android.util.Patterns
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -20,12 +18,8 @@ import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.ui.login.AuthState
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetState
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.Priority
-import com.google.android.gms.location.SettingsClient
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 object Common {
 
@@ -79,6 +73,16 @@ object Common {
         background(brush)
     }
 
+    fun formatDateForApi(dateStr: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = inputFormat.parse(dateStr)
+            date?.let { outputFormat.format(it) } ?: dateStr
+        } catch (e: Exception) {
+            dateStr // Fallback to original
+        }
+    }
 
 
 }

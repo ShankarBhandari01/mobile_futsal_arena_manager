@@ -1,9 +1,13 @@
 package com.example.futsalmanager.data.location
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.location.LocationManager
 import android.os.Looper
+import android.util.Log
 import androidx.core.location.LocationManagerCompat
 import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.repository.LocationRepository
@@ -17,67 +21,77 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class LocationServiceImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val client: FusedLocationProviderClient
 ) : LocationRepository {
+
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-    override fun checkGpsStatus(): Boolean {
-        return try {
-            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        } catch (e: Exception) {
-            false
-        }
+    override suspend fun checkGpsStatus(): Boolean = try {
+        locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    } catch (_: Exception) {
+        false
     }
 
-    override fun checkLocationStatus(): Boolean {
-        return LocationManagerCompat.isLocationEnabled(locationManager)
+    override suspend fun checkLocationStatus(): Boolean =
+        LocationManagerCompat.isLocationEnabled(locationManager)
+
+    override fun observeLocationStatus(): Flow<Boolean> = callbackFlow {
+        trySend(LocationManagerCompat.isLocationEnabled(locationManager))
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == LocationManager.PROVIDERS_CHANGED_ACTION) {
+                    trySend(LocationManagerCompat.isLocationEnabled(locationManager))
+                }
+            }
+        }
+
+        context.registerReceiver(
+            receiver,
+            IntentFilter(
+                LocationManager.PROVIDERS_CHANGED_ACTION
+            )
+        )
+
+        awaitClose {
+            context.unregisterReceiver(receiver)
+        }
     }
 
     @SuppressLint("MissingPermission")
     override fun getLiveLocation(): Flow<LocationModel> = callbackFlow {
 
-        //  Define the callback that will receive location updates
         val callback = object : LocationCallback() {
+
             override fun onLocationResult(result: LocationResult) {
-                super.onLocationResult(result)
-                result.lastLocation?.let { location ->
-                    // Map Android Location to your Domain LocationModel
-                    trySend(
-                        LocationModel(
-                            latitude = location.latitude,
-                            longitude = location.longitude
-                        )
-                    )
+                val bestLocation = result.lastLocation ?: result.locations.firstOrNull()
+                bestLocation?.let {
+                    trySend(LocationModel(it.latitude, it.longitude))
                 }
             }
         }
 
-        //  Configure the location request
         val request = LocationRequest.Builder(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY, // Battery Optimization
-            5000L // Interval (5 seconds)
-        ).apply {
-            setMinUpdateIntervalMillis(2000L) // Fastest interval
-        }.build()
+            Priority.PRIORITY_HIGH_ACCURACY,
+            5000L
+        )
+            .setMinUpdateIntervalMillis(2000L)
+            .build()
 
+        client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            .addOnFailureListener { e ->
+                Log.e("LocationService", "Update failed: ${e.message}")
+                close(e)
+            }
 
-        client.requestLocationUpdates(
-            request,
-            callback,
-            Looper.getMainLooper()
-        ).addOnFailureListener { e ->
-            close(e) // Close the flow if the request fails
-        }
-
-        // Cleanup: When the flow is cancelled, remove the callback
         awaitClose {
             client.removeLocationUpdates(callback)
         }
     }
-
-
 }

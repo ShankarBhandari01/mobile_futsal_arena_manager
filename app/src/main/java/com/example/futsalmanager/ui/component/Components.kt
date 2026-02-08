@@ -1,9 +1,13 @@
 package com.example.futsalmanager.ui.component
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,16 +22,20 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.LocationOff
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,9 +49,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -55,9 +65,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -75,6 +87,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -83,8 +96,11 @@ import coil.compose.AsyncImage
 import com.example.futsalmanager.R
 import com.example.futsalmanager.core.utils.Common.shimmerEffect
 import com.example.futsalmanager.domain.model.Arenas
+import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.login.AuthMode
 import com.example.futsalmanager.ui.theme.BrandGreen
+import com.example.futsalmanager.ui.theme.LightGreenBG
+import com.example.futsalmanager.ui.theme.WarningYellowBG
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -217,6 +233,7 @@ private fun LabelPreview() {
     )
 }
 
+@Deprecated("Use GenericSegmentedToggle instead")
 @Composable
 fun AuthToggle(
     mode: AuthMode,
@@ -265,6 +282,89 @@ fun AuthToggle(
                 onClick = { if (isLogin) onToggle() },
                 modifier = Modifier.weight(1f)
             )
+        }
+    }
+}
+
+
+@Composable
+fun <T> GenericSegmentedToggle(
+    selectedOption: T,
+    options: List<T>,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    labelProvider: (T) -> String = { it.toString() },
+    iconProvider: @Composable ((T) -> ImageVector?) = { null } // Optional icon
+) {
+    require(options.size == 2) {
+        "GenericSegmentedToggle requires exactly 2 options"
+    }
+
+    val selectedIndex = options.indexOf(selectedOption)
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFEFEFF2))
+    )
+    {
+        val toggleWidth = maxWidth / 2
+        val offset by animateDpAsState(
+            targetValue = if (selectedIndex == 0) 0.dp else toggleWidth,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "toggle_slide"
+        )
+
+        // Sliding pill
+        Box(
+            modifier = Modifier
+                .offset(x = offset)
+                .width(toggleWidth)
+                .fillMaxHeight()
+                .padding(4.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White)
+        )
+
+        Row(Modifier.fillMaxSize()) {
+            options.forEach { option ->
+                val isSelected = option == selectedOption
+                val icon = iconProvider(option)
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onOptionSelected(option) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (icon != null) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isSelected) BrandGreen else Color.Gray,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = labelProvider(option),
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) Color.Black else Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -434,36 +534,34 @@ fun PasswordField(
 
 @Composable
 fun ArenaCard(
-    arenas: Arenas,
+    arena: Arenas,
     onItemClick: (Arenas) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onItemClick(arena) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            Color.Black
-        ) // Explicit black border
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // --- TOP SECTION: Image and Titles ---
+            // --- TOP SECTION ---
             Row(
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Arena Thumbnail
                 AsyncImage(
-                    model = arenas.logoUrl,
-                    contentDescription = "Thumbnail of ${arenas.name}",
+                    model = arena.logoUrl,
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(64.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(R.drawable.reshot),
@@ -472,34 +570,21 @@ fun ArenaCard(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = arenas.name!!,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        text = arena.name ?: "Unknown Arena",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = arenas.id!!,
-                            fontSize = 14.sp,
-                            softWrap = false,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            color = Color.Gray
-                        )
-                    }
+                    Text(
+                        text = "ID: ${arena.id ?: "N/A"}",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
                 }
             }
 
@@ -510,44 +595,38 @@ fun ArenaCard(
                 Icon(
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
+                    tint = BrandGreen,
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = arenas.address!!,
-                    fontSize = 16.sp,
-                    softWrap = false,
+                    text = arena.address ?: "Address not available",
+                    fontSize = 14.sp,
                     maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Clip,
-                    color = Color.Gray
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color.DarkGray
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // --- BOTTOM SECTION: Action Link ---
+            // --- BOTTOM SECTION: Action ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "View Courts",
-                    fontSize = 18.sp,
+                    text = "View Details",
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = BrandGreen
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = Color.Black,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(
-                            onClick = { onItemClick(arenas) }
-                        )
+                    tint = BrandGreen,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -694,3 +773,178 @@ fun ArenaShimmerItem() {
     }
 }
 
+@Composable
+fun LocationSuccessBanner(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = LightGreenBG,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.dp,
+            BrandGreen.copy(alpha = 0.2f)
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.NearMe,
+                contentDescription = null,
+                tint = Color.Black,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Showing arenas sorted by distance from your location",
+                color = Color.Black,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+
+@Composable
+fun LocationWarningBanner(
+    modifier: Modifier = Modifier,
+    onIntent: (HomeIntent) -> Unit
+) {
+    Surface(
+        color = WarningYellowBG,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.dp,
+            Color(0xFFFFF1B8)
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+    {
+        Row(
+            modifier = modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Outlined.LocationOff,
+                contentDescription = null,
+                modifier = modifier.size(20.dp)
+            )
+            Spacer(modifier = modifier.width(12.dp))
+            Text(
+                text = "Enable location to see nearby arenas first",
+                modifier = modifier.weight(1f),
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Enable",
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .clickable {
+                        onIntent(HomeIntent.EnableLocationClicked)
+                    }
+
+            )
+        }
+    }
+}
+
+@Composable
+fun LogoutConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Logout", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text("Are you sure you want to log out of Futsal Manager?")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Logout", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.Gray)
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
+    )
+}
+
+@Composable
+fun EmptyStateComponent(
+    modifier: Modifier = Modifier,
+    onResetFilters: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp, bottom = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Subtle Icon
+        Surface(
+            shape = CircleShape,
+            color = Color(0xFFF5F5F5),
+            modifier = Modifier.size(120.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.SearchOff, // Or a custom soccer ball icon
+                contentDescription = null,
+                tint = Color.LightGray,
+                modifier = Modifier.padding(30.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "No Arenas Found",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "We couldn't find any futsal courts matching your current filters. Try changing the date or city.",
+            fontSize = 14.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 40.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Action Button
+        OutlinedButton(
+            onClick = onResetFilters,
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, BrandGreen)
+        ) {
+            Text("Clear Search", color = BrandGreen)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LocationBannerPreview() {
+    LocationSuccessBanner()
+}

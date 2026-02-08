@@ -16,7 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.futsalmanager.ui.component.AuthToggle
+import com.example.futsalmanager.ui.component.GenericSegmentedToggle
 import com.example.futsalmanager.ui.component.LoginContent
 import com.example.futsalmanager.ui.component.RegisterContent
 import com.example.futsalmanager.ui.component.TermsText
@@ -115,9 +114,11 @@ fun LoginScreen(
                     }
                     item {
                         // Animated Toggle
-                        AuthToggle(
-                            mode = state.mode,
-                            onToggle = { onIntent(AuthIntent.ToggleMode) })
+                        GenericSegmentedToggle(
+                            onOptionSelected = { onIntent(AuthIntent.ToggleMode(it)) },
+                            selectedOption = state.mode,
+                            options = listOf(AuthMode.LOGIN, AuthMode.REGISTER)
+                        )
                     }
 
                     item {

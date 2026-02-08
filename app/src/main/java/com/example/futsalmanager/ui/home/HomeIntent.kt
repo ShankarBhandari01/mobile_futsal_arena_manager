@@ -1,6 +1,7 @@
 package com.example.futsalmanager.ui.home
 
 sealed interface HomeIntent {
+    data class ViewModeChanged(val viewMode: ViewMode) : HomeIntent
     data class SearchChanged(val query: String) : HomeIntent
     data class DateChanged(val date: String) : HomeIntent
     object MarketPlaceClicked : HomeIntent
@@ -9,4 +10,6 @@ sealed interface HomeIntent {
     object LogoutClicked : HomeIntent
     object Refresh : HomeIntent
     object EnableLocationClicked : HomeIntent
+    object DismissLogoutDialog : HomeIntent
+    object ConfirmLogout : HomeIntent
 }

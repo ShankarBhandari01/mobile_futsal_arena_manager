@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
 import kotlinx.coroutines.CoroutineScope
@@ -53,7 +54,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun FutsalDrawerSheet(
     drawerState: DrawerState,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    onIntent: (HomeIntent) -> Unit = {}
 ) {
     ModalDrawerSheet(
         modifier = Modifier.fillMaxHeight(),
@@ -65,7 +67,7 @@ fun FutsalDrawerSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -157,7 +159,9 @@ fun FutsalDrawerSheet(
 
                 // Custom Outlined Logout Button
                 OutlinedButton(
-                    onClick = { /* Handle Logout */ },
+                    onClick = {
+                        onIntent(HomeIntent.LogoutClicked)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, Color(0xFFD32F2F)),

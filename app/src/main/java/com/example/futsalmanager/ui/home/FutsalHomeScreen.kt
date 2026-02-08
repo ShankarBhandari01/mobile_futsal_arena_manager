@@ -1,23 +1,25 @@
 import android.Manifest
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.LocationOff
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +40,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -47,9 +51,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_YES
@@ -62,18 +69,31 @@ import com.example.futsalmanager.core.utils.LocationUtils.launchLocationSettings
 import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.component.ArenaCard
 import com.example.futsalmanager.ui.component.ArenaShimmerItem
+import com.example.futsalmanager.ui.component.EmptyStateComponent
 import com.example.futsalmanager.ui.component.FutsalDatePickerField
+import com.example.futsalmanager.ui.component.GenericSegmentedToggle
+import com.example.futsalmanager.ui.component.LocationSuccessBanner
+import com.example.futsalmanager.ui.component.LocationWarningBanner
+import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
 import com.example.futsalmanager.ui.home.HomeEffect
 import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.home.HomeState
+import com.example.futsalmanager.ui.home.ViewMode
 import com.example.futsalmanager.ui.home.navigation_drawer.FutsalDrawerSheet
 import com.example.futsalmanager.ui.home.viewModels.HomeViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
 import com.example.futsalmanager.ui.theme.OrangeText
-import com.example.futsalmanager.ui.theme.WarningYellowBG
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 
 
@@ -81,23 +101,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun FutsalHomeScreenRoute(
     snackbarHostState: SnackbarHostState,
+    onLogout: () -> Unit
 ) {
     val viewmodel = hiltViewModel<HomeViewModel>()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val state by viewmodel.state.collectAsStateWithLifecycle()
+
 
     val settingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            scope.launch {
-                viewmodel.updateLocationState()
-            }
-        }
-    }
-
-
+    ) { _ -> }
 
     val permissionState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -105,11 +118,12 @@ fun FutsalHomeScreenRoute(
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
-
     LaunchedEffect(Unit) {
-
         permissionState.launchMultiplePermissionRequest()
+    }
 
+
+    LaunchedEffect(viewmodel.effect) {
         viewmodel.effect.collect { e ->
             when (e) {
                 is HomeEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
@@ -126,7 +140,7 @@ fun FutsalHomeScreenRoute(
                 }
 
                 is HomeEffect.NavigateToLogin -> {
-                    // Handle navigation
+                    onLogout()
                 }
 
                 is HomeEffect.NavigateToLocationSettings -> {
@@ -135,16 +149,11 @@ fun FutsalHomeScreenRoute(
             }
         }
     }
+
     FutsalHomeScreen(
         state = state,
         onIntent = viewmodel::dispatch
     )
-
-    if (permissionState.allPermissionsGranted) {
-        // Collect location and show the map/list
-        val location by viewmodel.location.collectAsStateWithLifecycle()
-        Text(text = "Your location: ${location.latitude}, ${location.longitude}")
-    }
 }
 
 
@@ -155,16 +164,28 @@ fun FutsalHomeScreen(
     state: HomeState = HomeState(),
     onIntent: (HomeIntent) -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
+    val pullToRefreshState = rememberPullToRefreshState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         state = rememberTopAppBarState()
     )
 
+    if (state.showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                onIntent(HomeIntent.ConfirmLogout)
+            },
+            onDismiss = {
+                onIntent(HomeIntent.DismissLogoutDialog)
+            }
+        )
+    }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            FutsalDrawerSheet(drawerState, scope)
+            FutsalDrawerSheet(drawerState, scope, onIntent)
         }
     ) {
         Scaffold(
@@ -176,8 +197,7 @@ fun FutsalHomeScreen(
                         navigationIconContentColor = Color.Black,
                         titleContentColor = Color.Black,
                         actionIconContentColor = Color.Black
-                    ),
-                    title = {
+                    ), title = {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -194,22 +214,21 @@ fun FutsalHomeScreen(
                                 }
                             }
                         }
-                    },
-                    navigationIcon = {
+                    }, navigationIcon = {
                         IconButton(onClick = {
                             scope.launch {
-                                if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                                if (drawerState.isClosed)
+                                    drawerState.open() else
+                                    drawerState.close()
                             }
                         }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
-                    },
-                    actions = {
+                    }, actions = {
                         Surface(
                             shape = CircleShape,
                             color = Color(0xFFD32F2F),
-                            modifier = Modifier
-                                .size(36.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
@@ -223,244 +242,294 @@ fun FutsalHomeScreen(
                     },
                     scrollBehavior = scrollBehavior
                 )
-            }
-        )
+            })
         { padding ->
-            LazyColumn(
+            PullToRefreshBox(
+                state = pullToRefreshState,
+                isRefreshing = state.isLoading,
+                onRefresh = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onIntent(HomeIntent.Refresh)
+                },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            )
-            {
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    // Trophy Icon Header
-                    Surface(
-                        shape = CircleShape,
-                        color = LightGreenBG,
-                        modifier = Modifier.size(100.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.EmojiEvents, // Use a trophy icon
-                            contentDescription = null,
-                            tint = BrandGreen,
-                            modifier = Modifier.padding(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "Find & Book Futsal Courts",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = "Search arenas, view availability, and book your court instantly.",
-                        fontSize = 16.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                    .padding(padding),
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullToRefreshState,
+                        isRefreshing = state.isLoading,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        containerColor = Color.White,
+                        color = BrandGreen
                     )
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    // Search Fields
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        placeholder = { Text("Search arenas by name or city...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    FutsalDatePickerField()
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    // Toggle Buttons (Grid/Map)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                            .padding(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(Color.White, RoundedCornerShape(6.dp))
-                                .border(
-                                    1.dp,
-                                    Color.LightGray.copy(alpha = 0.3f),
-                                    RoundedCornerShape(6.dp)
-                                ),
-                            contentAlignment = Alignment.Center
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                )
+                {
+                    item {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                Icons.Default.GridView,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Map,
-                                contentDescription = null,
-                                tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    if (!state.isLocationEnabled) {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        // Location Warning Banner
-                        Surface(
-                            color = WarningYellowBG,
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                Color(0xFFFFF1B8)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            // Trophy Icon Header
+                            Surface(
+                                shape = CircleShape,
+                                color = LightGreenBG,
+                                modifier = Modifier.size(100.dp)
                             ) {
                                 Icon(
-                                    Icons.Outlined.LocationOff,
+                                    imageVector = Icons.Default.EmojiEvents, // Use a trophy icon
                                     contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = BrandGreen,
+                                    modifier = Modifier.padding(24.dp)
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Enable location to see nearby arenas first",
-                                    modifier = Modifier.weight(1f),
-                                    fontSize = 14.sp
-                                )
-                                Text(
-                                    text = "Enable",
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier
-                                        .padding(start = 8.dp)
-                                        .clickable {
-                                            onIntent(HomeIntent.EnableLocationClicked)
-                                        }
+                            }
 
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Text(
+                                text = "Find & Book Futsal Courts",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                text = "Search arenas, view availability, and book your court instantly.",
+                                fontSize = 16.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 12.dp),
+
+                                )
+                        }
+                    }
+                    item {
+                        // Search Fields
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                            OutlinedTextField(
+                                value = state.search,
+                                onValueChange = {
+                                    onIntent(HomeIntent.SearchChanged(it))
+                                },
+                                placeholder = { Text("Search arenas by name or city...") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = null
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            FutsalDatePickerField(
+                                onDateSelected = {
+                                    onIntent(HomeIntent.DateChanged(it.toString()))
+                                }
+                            )
+                        }
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        GenericSegmentedToggle(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            selectedOption = state.viewMode,
+                            options = listOf(ViewMode.GRID, ViewMode.MAP),
+                            onOptionSelected = { onIntent(HomeIntent.ViewModeChanged(it)) },
+                            labelProvider = { if (it == ViewMode.GRID) "List" else "Map" },
+                            iconProvider = { mode ->
+                                if (mode == ViewMode.GRID) Icons.Default.GridView else Icons.Default.Map
+                            }
+                        )
+                    }
+
+                    item {
+                        androidx.compose.animation.AnimatedContent(
+                            targetState = state.isLocationEnabled,
+                            transitionSpec = {
+                                (fadeIn() + expandVertically()) togetherWith (fadeOut() + shrinkVertically())
+                            },
+                            label = "BannerTransition"
+                        ) { locationEnabled ->
+                            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                                Column {
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    if (!locationEnabled) {
+                                        LocationWarningBanner(onIntent = onIntent)
+                                    } else {
+                                        LocationSuccessBanner()
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        // Stats Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            StatCard(
+                                Modifier.weight(1f),
+                                "34",
+                                "Arenas",
+                                BrandGreen,
+                                LightGreenBG
+                            )
+                            StatCard(
+                                Modifier.weight(1f), "24/7", "Booking", BrandGreen, LightGreenBG
+                            )
+                            StatCard(
+                                Modifier.weight(1f),
+                                "Instant",
+                                "Confirm",
+                                OrangeText,
+                                Color(0xFFFFF7E6)
+                            )
+                        }
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
+
+                    when {
+                        state.isLoading && state.arenaList.isNullOrEmpty() -> {
+                            items(5, key = { "shimmer_$it" }) {
+                                ArenaShimmerItem()
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+
+                        !state.isLoading && state.arenaList?.isEmpty() == true -> {
+                            item(key = "empty_state") {
+                                EmptyStateComponent(
+                                    onResetFilters = {
+                                        onIntent(HomeIntent.SearchChanged(""))
+                                    }
                                 )
                             }
                         }
+
+                        state.viewMode == ViewMode.MAP -> {
+                            item(key = "map_view") {
+                                ArenaMapView(
+                                    arenas = state.arenaList ?: emptyList(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(500.dp)
+                                        .padding(horizontal = 20.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                )
+                            }
+                        }
+
+                        else -> {
+                            arenasListSection(
+                                arenas = state.arenaList,
+                                onItemClick = { arena ->
+                                    // onIntent(HomeIntent.ArenaClicked(arena.id))
+                                }
+                            )
+                        }
                     }
 
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    // Stats Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        StatCard(
-                            Modifier.weight(1f),
-                            "34", "Arenas",
-                            BrandGreen,
-                            LightGreenBG
-                        )
-                        StatCard(
-                            Modifier.weight(1f),
-                            "24/7", "Booking",
-                            BrandGreen,
-                            LightGreenBG
-                        )
-                        StatCard(
-                            Modifier.weight(1f),
-                            "Instant",
-                            "Confirm",
-                            OrangeText,
-                            Color(0xFFFFF7E6)
-                        )
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
-                    if (state.isLoading && state.arenaList?.isEmpty() == true) {
-                        //  shimmer items while loading
-                        ArenaShimmerItem()
-                    } else {
-                        // Show actual data
-                        ArenasListSection(arenas = state.arenaList)
-                    }
                 }
             }
+
         }
     }
+}
 
+fun LazyListScope.arenasListSection(
+    arenas: List<Arenas>?,
+    onItemClick: (Arenas) -> Unit
+) {
+    if (arenas.isNullOrEmpty()) return
+
+    item(key = "header_all_arenas") {
+        Text(
+            text = "All Arenas",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        )
+    }
+
+    items(
+        items = arenas,
+        key = { arena -> arena.id!! }
+    ) { arena ->
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 20.dp)
+                .animateItem()
+        ) {
+            ArenaCard(
+                arena = arena,
+                onItemClick = { onItemClick(arena) }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
 }
 
 
 @Composable
-fun ArenasListSection(
-    arenas: List<Arenas>? = emptyList()
+fun ArenaMapView(
+    arenas: List<Arenas>,
+    modifier: Modifier = Modifier
 ) {
-    if (arenas != null) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-        ) {
-            Text(
-                text = "All Arenas",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            arenas.forEach { arena ->
-                ArenaCard(
-                    arena,
-                    onItemClick = {
+    val singapore = LatLng(1.35, 103.87)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(singapore, 10f)
+    }
 
+    GoogleMap(
+        modifier = modifier,
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(isMyLocationEnabled = true),
+        uiSettings = MapUiSettings(zoomControlsEnabled = false)
+    ) {
+        arenas.forEach { arena ->
+            if (arena.latitude != null && arena.longitude != null) {
+                Marker(
+                    state = MarkerState(position = LatLng(arena.latitude, arena.longitude)),
+                    title = arena.name,
+                    snippet = arena.address,
+                    onClick = {
+                        // You can show a small card or navigate here
+                        false
                     }
                 )
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
 }
+
 
 @Composable
 fun StatCard(
-    modifier: Modifier,
-    value: String,
-    label: String,
-    textColor: Color,
-    bgColor: Color
+    modifier: Modifier, value: String, label: String, textColor: Color, bgColor: Color
 ) {
     Surface(
-        modifier = modifier,
-        color = bgColor,
-        shape = RoundedCornerShape(12.dp)
+        modifier = modifier, color = bgColor, shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(vertical = 20.dp),
@@ -477,7 +546,5 @@ fun StatCard(
 @Composable
 fun FutsalHomeScreenPreview() {
     FutsalHomeScreen(
-        state = HomeState(),
-        onIntent = {}
-    )
+        state = HomeState(), onIntent = {})
 }

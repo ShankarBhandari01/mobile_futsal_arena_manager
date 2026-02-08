@@ -17,10 +17,18 @@ class HomeRepositoryImpl @Inject constructor(
         search: String,
         offset: Int,
         limit: Int,
-        date: String
+        date: String,
+        lat: Double?,
+        lng: Double?
     ): Result<ArenaListResponse> {
-        return api.getArenaList(search, offset, limit, date)
-
+        return api.getArenaList(
+            search,
+            offset,
+            limit,
+            date,
+            lat,
+            lng
+        )
     }
 
 }

@@ -49,6 +49,13 @@ android {
 }
 
 dependencies {
+
+    // Google Maps for Compose
+    implementation("com.google.maps.android:maps-compose:8.0.1")
+    // Google Play Services for Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    //  For Utils (like Clustering or Heatmaps)
+    implementation("com.google.maps.android:maps-compose-utils:8.0.1")
     //permission
     implementation(libs.accompanist.permissions)
     // Play Services for Location
@@ -64,6 +71,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3.lint)
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.play.services.maps)
     ksp("com.google.dagger:hilt-android-compiler:2.59")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("androidx.hilt:hilt-compiler:1.3.0")

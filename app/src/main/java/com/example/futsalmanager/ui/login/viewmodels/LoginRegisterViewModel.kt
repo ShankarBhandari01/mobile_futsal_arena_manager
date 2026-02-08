@@ -62,13 +62,8 @@ class LoginRegisterViewModel @Inject constructor(
 
     fun dispatch(intent: AuthIntent) {
         when (intent) {
-            AuthIntent.ToggleMode -> {
-                _state.update {
-                    it.copy(
-                        mode = if (it.mode == AuthMode.LOGIN) AuthMode.REGISTER
-                        else AuthMode.LOGIN
-                    )
-                }
+            is AuthIntent.ToggleMode -> {
+                _state.update { it.copy(mode = intent.authMode) }
             }
 
             is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.email) }

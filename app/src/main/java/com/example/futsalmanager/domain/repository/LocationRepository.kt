@@ -5,7 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface LocationRepository {
     fun getLiveLocation(): Flow<LocationModel>
-    fun checkGpsStatus(): Boolean
-    fun checkLocationStatus(): Boolean
+    suspend fun checkGpsStatus(): Boolean
+    suspend fun checkLocationStatus(): Boolean
+
+    fun observeLocationStatus(): Flow<Boolean>
 }
 

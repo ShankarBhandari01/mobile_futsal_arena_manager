@@ -1,7 +1,7 @@
 package com.example.futsalmanager.ui.login
 
 sealed interface AuthIntent {
-    data object ToggleMode : AuthIntent
+    data class ToggleMode(val authMode: AuthMode) : AuthIntent
 
     data class EmailChanged(val email: String) : AuthIntent
     data class PasswordChanged(val password: String) : AuthIntent

@@ -18,13 +18,17 @@ class HomeApiImpl @Inject constructor(
         search: String,
         offset: Int,
         limit: Int,
-        date: String
+        date: String,
+        lat: Double?,
+        lng: Double?
     ): Result<ArenaListResponse> {
         return safeApiCall {
             client.get(ApiRegistry.ARENA_LIST) {
                 parameter("search", search)
                 parameter("offset", offset)
                 parameter("limit", limit)
+                parameter("lat", lat)
+                parameter("lng", lng)
             }.body<ArenaListResponse>()
         }
     }

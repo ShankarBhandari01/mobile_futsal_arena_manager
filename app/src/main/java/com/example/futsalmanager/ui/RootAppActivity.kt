@@ -1,13 +1,10 @@
 package com.example.futsalmanager.ui
 
 import FutsalHomeScreenRoute
-import android.app.Activity.RESULT_OK
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -66,15 +63,17 @@ fun AppRoot() {
 
         val navController = rememberNavController()
         val snackbarHostState = remember { SnackbarHostState() }
+
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) }
         )
-        { innerPadding ->
+        { padding ->
 
             NavHost(
                 navController = navController,
                 startDestination = destination,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(paddingValues = padding)
             ) {
                 composable(
                     route = Routes.LOGIN_SCREEN
@@ -147,7 +146,14 @@ fun AppRoot() {
                     route = Routes.HOME_SCREEN
                 ) {
                     FutsalHomeScreenRoute(
-                        snackbarHostState = snackbarHostState
+                        snackbarHostState = snackbarHostState,
+                        onLogout = {
+                            viewModel.logout()
+                            navController.navigate(Routes.LOGIN_SCREEN) {
+                                popUpTo(Routes.HOME_SCREEN) { inclusive = true }
+                            }
+
+                        }
                     )
                 }
             }

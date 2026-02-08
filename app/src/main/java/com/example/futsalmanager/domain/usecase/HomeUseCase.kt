@@ -1,24 +1,34 @@
 package com.example.futsalmanager.domain.usecase
 
 import android.location.Location
+import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
+import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.repository.HomeRepository
 import com.example.futsalmanager.domain.repository.LocationRepository
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class HomeUseCase @Inject constructor(
     private val repo: HomeRepository,
-    location: LocationRepository
+    private val location: LocationRepository
 ) {
+    val userLocation = location.getLiveLocation()
+
+    suspend fun isLocationEnable() = location.checkLocationStatus()
+
+    suspend fun isGpsEnable() = location.checkGpsStatus()
+
+    val observerLocationStatus = location.observeLocationStatus()
+
     suspend fun getArenaList(
         search: String,
         offset: Int,
         limit: Int,
-        date: String?
+        date: String?,
+        location: LocationModel? = null,
+        isGpsEnabled: Boolean,
     ): Result<ArenaListResponse> {
 
         val sanitizedSearch = search.trim()
@@ -27,44 +37,21 @@ class HomeUseCase @Inject constructor(
         if (sanitizedSearch.isNotEmpty() && sanitizedSearch.length < 2) {
             return Result.success(ArenaListResponse())
         }
-        // If your DatePicker gives "Feb 05, 2026", convert it to "2026-02-05"
+        // If DatePicker gives "Feb 05, 2026", convert it to "2026-02-05"
         val formattedDate = date?.let { formatDateForApi(it) } ?: ""
+
+        // check if we have valid user location
+        val shouldSortByDistance = isGpsEnabled &&
+                location?.latitude != 0.0 &&
+                location?.longitude != 0.0
+
         return repo.getArenaList(
             search = sanitizedSearch,
             offset = offset,
             limit = limit,
-            date = formattedDate
+            date = formattedDate,
+            lat = if (shouldSortByDistance) location?.latitude else null,
+            lng = if (shouldSortByDistance) location?.longitude else null,
         )
     }
-
-    private fun formatDateForApi(dateStr: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = inputFormat.parse(dateStr)
-            date?.let { outputFormat.format(it) } ?: dateStr
-        } catch (e: Exception) {
-            dateStr // Fallback to original
-        }
-    }
-
-    val userLocation = location.getLiveLocation()
-
-    fun calculateDistance(
-        userLat: Double, userLon: Double,
-        arenaLat: Double, arenaLon: Double
-    ): Float {
-        val results = FloatArray(1)
-
-        Location.distanceBetween(
-            userLat,
-            userLon,
-            arenaLat,
-            arenaLon, results
-        )
-        return results[0] / 1000 // Convert meters to Kilometers
-    }
-
-    val isLocationEnable = location.checkLocationStatus()
-    val isGpsEnable = location.checkGpsStatus()
 }
