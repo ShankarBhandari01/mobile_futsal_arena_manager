@@ -49,13 +49,10 @@ android {
 }
 
 dependencies {
+    implementation("org.maplibre.gl:android-sdk:12.3.1")
+    // osm Maps for Compose
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
 
-    // Google Maps for Compose
-    implementation("com.google.maps.android:maps-compose:8.0.1")
-    // Google Play Services for Maps
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
-    //  For Utils (like Clustering or Heatmaps)
-    implementation("com.google.maps.android:maps-compose-utils:8.0.1")
     //permission
     implementation(libs.accompanist.permissions)
     // Play Services for Location

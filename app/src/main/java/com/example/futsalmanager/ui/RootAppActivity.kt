@@ -1,11 +1,13 @@
 package com.example.futsalmanager.ui
 
 import FutsalHomeScreenRoute
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -22,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.futsalmanager.ui.home.booking.BookingScreenRoute
 import com.example.futsalmanager.ui.login.LoginScreenRoute
 import com.example.futsalmanager.ui.login.email_verification.EmailVerificationScreenRoute
 import com.example.futsalmanager.ui.login.forget_password.ForgotPasswordScreenRoute
@@ -53,6 +56,7 @@ class RootAppActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppRoot() {
 
@@ -150,10 +154,23 @@ fun AppRoot() {
                         onLogout = {
                             viewModel.logout()
                             navController.navigate(Routes.LOGIN_SCREEN) {
-                                popUpTo(Routes.HOME_SCREEN) { inclusive = true }
+                                popUpTo(Routes.HOME_SCREEN)
+                                {
+                                    inclusive = true
+                                }
                             }
-
+                        },
+                        arenaClicked = { arena ->
+                            navController.navigate(Routes.BOOKING)
                         }
+                    )
+                }
+
+                composable(
+                    route = Routes.BOOKING
+                ) {
+                    BookingScreenRoute(
+                        snackbarHostState = snackbarHostState
                     )
                 }
             }

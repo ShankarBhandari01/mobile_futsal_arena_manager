@@ -11,6 +11,9 @@ object Routes {
 
     const val PROFILE = "profile_screen"
 
+    const val MARKETPLACE = "marketplace_screen"
+    const val BOOKING = "booking_screen"
+
     fun passwordResetScreen(email: String) =
         "password_reset_screen/${Uri.encode(email)}"
 }

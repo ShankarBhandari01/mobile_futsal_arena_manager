@@ -107,6 +107,10 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.DismissLogoutDialog -> _state.update {
                 it.copy(showLogoutDialog = false)
             }
+
+            is HomeIntent.ArenaClicked -> viewModelScope.launch {
+                _effect.send(HomeEffect.NavigateToBookingWithArea(intent.arena))
+            }
             // Group navigation intents together
             HomeIntent.MarketPlaceClicked,
             HomeIntent.MyBookingClicked,
