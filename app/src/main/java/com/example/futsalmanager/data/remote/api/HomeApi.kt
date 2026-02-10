@@ -1,11 +1,10 @@
 package com.example.futsalmanager.data.remote.api
 
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
-import com.example.futsalmanager.domain.model.LocationModel
 
 
 interface HomeApi {
-    suspend fun getArenaList(
+    suspend fun getArenaListFromApi(
         search: String,
         offset: Int,
         limit: Int,

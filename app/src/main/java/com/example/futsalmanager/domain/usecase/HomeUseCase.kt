@@ -1,6 +1,5 @@
 package com.example.futsalmanager.domain.usecase
 
-import android.location.Location
 import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.model.LocationModel
@@ -22,7 +21,7 @@ class HomeUseCase @Inject constructor(
 
     val observerLocationStatus = location.observeLocationStatus()
 
-    suspend fun getArenaList(
+    suspend fun getArenaListFromApi(
         search: String,
         offset: Int,
         limit: Int,
@@ -45,7 +44,7 @@ class HomeUseCase @Inject constructor(
                 location?.latitude != 0.0 &&
                 location?.longitude != 0.0
 
-        return repo.getArenaList(
+        return repo.getArenaListFromApi(
             search = sanitizedSearch,
             offset = offset,
             limit = limit,
@@ -54,4 +53,9 @@ class HomeUseCase @Inject constructor(
             lng = if (shouldSortByDistance) location?.longitude else null,
         )
     }
+
+    val arenas = repo.getArenaListFromDB()
+
+    fun areanaById(id: String) = repo.getArenaById(id)
+
 }

@@ -3,7 +3,6 @@ package com.example.futsalmanager.ui.home.booking
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,18 +24,19 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.EventRepeat
+import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,29 +54,45 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.futsalmanager.R
+import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
+import com.example.futsalmanager.ui.theme.LightGreenBG
 import java.time.LocalDate
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BookingScreenRoute(
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onBackClick: () -> Unit
 ) {
+    val viewModel = hiltViewModel<BookingViewModel>()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+
     ArenaBookingScreen(
-        onBackClick = {}
+        state = state,
+        onIntent = viewModel::dispatch,
+        onBackClick = onBackClick
     )
 }
 
@@ -84,17 +100,20 @@ fun BookingScreenRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArenaBookingScreen(
+    state: BookingState = BookingState(),
+    onIntent: (BookingIntent) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text( "Arena Details", fontSize = 18.sp) },
+                title = { Text("Arena Details", fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back")
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -111,7 +130,7 @@ fun ArenaBookingScreen(
         ) {
 
             item {
-                ArenaHeaderCard()
+                ArenaHeaderCard(state)
             }
 
             item {
@@ -158,45 +177,102 @@ fun ArenaBookingScreen(
 }
 
 @Composable
-fun ArenaHeaderCard() {
+fun ArenaHeaderCard(state: BookingState) {
+    val arena = state.arena
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)), // Light green theme
-        shape = RoundedCornerShape(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Arena Image (Web: Small thumbnail)
-            Surface(Modifier.size(60.dp), shape = RoundedCornerShape(8.dp)) {
-                Image(painter = painterResource(id = R.drawable.reshot), contentDescription = null)
-            }
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(
-                    "Sitapaila Sports Arena" ?: "",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-                Text(
-                    "${"sitapaila"} • 4 Courts",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-                AssistChip(
-                    onClick = { /* Action */ },
-                    label = { Text("Asia/Kathmandu") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = null,
-                            Modifier.size(AssistChipDefaults.IconSize)
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        leadingIconContentColor = BrandGreen,
-                        labelColor = Color.Black
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(70.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = LightGreenBG
+                ) {
+                    AsyncImage(
+                        model = arena?.logoUrl ?: R.drawable.reshot,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.reshot),
+                        error = painterResource(R.drawable.reshot)
                     )
-                )
+                }
+
+                Spacer(Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = arena?.name ?: "Loading Arena...",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = null,
+                            tint = BrandGreen,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = arena?.city ?: "Location unknown",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
             }
+
+            Spacer(Modifier.height(16.dp))
+            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                InfoBadge(
+                    icon = Icons.Default.SportsSoccer,
+                    label = "${arena?.courtCount ?: 0} Courts"
+                )
+                InfoBadge(
+                    icon = Icons.Default.AccessTime,
+                    label = arena?.timezone?.split("/")?.last() ?: "Kathmandu"
+                )
+                if (arena?.arenaType != null) {
+                    InfoBadge(icon = Icons.Default.HistoryEdu, label = arena.arenaType)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoBadge(icon: ImageVector, label: String) {
+    Surface(
+        color = LightGreenBG,
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, null, modifier = Modifier.size(14.dp), tint = BrandGreen)
+            Spacer(Modifier.width(4.dp))
+            Text(label, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = BrandGreen)
         }
     }
 }
@@ -265,7 +341,8 @@ fun RecurringBookingBanner() {
                 )
             }
             .background(BrandGreen.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-            .padding(16.dp).clickable{
+            .padding(16.dp)
+            .clickable {
 
             }
 
@@ -283,7 +360,10 @@ fun RecurringBookingBanner() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun BookingSelectionCard(onCourtSelected: (String) -> Unit) {
+fun BookingSelectionCard(
+    state: BookingState = BookingState(),
+    onCourtSelected: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     var selectedCourt by remember { mutableStateOf("Court 1") }
     val courts = listOf("Court 1", "Court 2", "Court A", "Court B")
@@ -363,7 +443,9 @@ fun DateItem(date: LocalDate, isSelected: Boolean) {
 }
 
 @Composable
-fun AvailableSlotsSection() {
+fun AvailableSlotsSection(
+    state: BookingState = BookingState(),
+) {
     val morningSlots = listOf("06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM")
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

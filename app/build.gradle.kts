@@ -49,6 +49,12 @@ android {
 }
 
 dependencies {
+    //room
+    implementation("androidx.room:room-runtime:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
+    //  Paging 3 Integration
+    implementation("androidx.room:room-paging:2.8.4")
+
     implementation("org.maplibre.gl:android-sdk:12.3.1")
     // osm Maps for Compose
     implementation("org.osmdroid:osmdroid-android:6.1.20")

@@ -14,7 +14,7 @@ class HomeApiImpl @Inject constructor(
     private val client: HttpClient
 ) : HomeApi {
 
-    override suspend fun getArenaList(
+    override suspend fun getArenaListFromApi(
         search: String,
         offset: Int,
         limit: Int,

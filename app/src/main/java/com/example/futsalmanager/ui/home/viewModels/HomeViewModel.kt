@@ -1,7 +1,9 @@
 package com.example.futsalmanager.ui.home.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.domain.model.FilterParams
 import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.usecase.HomeUseCase
@@ -11,77 +13,101 @@ import com.example.futsalmanager.ui.home.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val useCase: HomeUseCase
+    private val useCase: HomeUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
+    private var arenaId = savedStateHandle.get<String>("id") ?: ""
+
     private val _state = MutableStateFlow(HomeState())
-    val state = _state.asStateFlow()
+
+    // single source of truth DB
+    val state: StateFlow<HomeState> = combine(_state, useCase.arenas) { currentState, arenaList ->
+        currentState.copy(
+            arenaList = arenaList, isLoading = false
+        )
+
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = HomeState()
+    )
 
     private val _effect = Channel<HomeEffect>(capacity = Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
 
     init {
 
         observeSearchAndFilters()
 
-        useCase.observerLocationStatus
-            .onEach { isEnabled ->
-                _state.update {
-                    it.copy(isLocationEnabled = isEnabled)
-                }
+        useCase.observerLocationStatus.onEach { isEnabled ->
+            _state.update {
+                it.copy(isLocationEnabled = isEnabled)
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
-        useCase.userLocation
-            .distinctUntilChanged()
-            .onEach { loc ->
-                _state.update {
-                    it.copy(location = loc)
-                }
+        useCase.userLocation.distinctUntilChanged().onEach { loc ->
+            _state.update {
+                it.copy(location = loc)
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
     }
 
     @OptIn(FlowPreview::class)
     private fun observeSearchAndFilters() {
-        state
-            .map {
-                FilterParams(
-                    query = it.search,
-                    date = it.date,
-                    location = it.location,
-                    isEnabled = it.isLocationEnabled
-                )
-            }
-            .distinctUntilChanged()
-            .debounce(500)
-            .onEach { params ->
-                loadArenaList(
-                    query = params.query,
-                    date = params.date,
-                    location = params.location,
-                    isLocationEnabled = params.isEnabled
-                )
-            }
-            .launchIn(viewModelScope)
+        state.map {
+            FilterParams(
+                query = it.search,
+                date = it.date,
+                location = it.location,
+                isEnabled = it.isLocationEnabled
+            )
+        }.distinctUntilChanged().debounce(500).onEach { params ->
+            loadArenaList(
+                query = params.query,
+                date = params.date,
+                location = params.location,
+                isLocationEnabled = params.isEnabled
+            )
+        }.launchIn(viewModelScope)
     }
 
     fun dispatch(intent: HomeIntent) {
         when (intent) {
+
+            is HomeIntent.LoadNextPage -> {
+                val currentState = _state.value
+                val nextOffset = currentState.offset + currentState.limit
+                _state.update { it.copy(offset = nextOffset) }
+
+                viewModelScope.launch {
+                    loadArenaList(
+                        query = currentState.search,
+                        date = currentState.date,
+                        location = currentState.location
+                    )
+                }
+            }
+
             is HomeIntent.ViewModeChanged -> {
                 _state.update { it.copy(viewMode = intent.viewMode) }
             }
@@ -95,6 +121,7 @@ class HomeViewModel @Inject constructor(
             }
 
             is HomeIntent.Refresh -> viewModelScope.launch {
+                _state.update { it.copy(offset = 0) }
                 val s = _state.value
                 loadArenaList(s.search, s.date, s.location, s.isLocationEnabled)
             }
@@ -112,10 +139,9 @@ class HomeViewModel @Inject constructor(
                 _effect.send(HomeEffect.NavigateToBookingWithArea(intent.arena))
             }
             // Group navigation intents together
-            HomeIntent.MarketPlaceClicked,
-            HomeIntent.MyBookingClicked,
-            HomeIntent.MyProfileClicked,
-            HomeIntent.ConfirmLogout -> handleNavigation(intent)
+            HomeIntent.MarketPlaceClicked, HomeIntent.MyBookingClicked, HomeIntent.MyProfileClicked, HomeIntent.ConfirmLogout -> handleNavigation(
+                intent
+            )
 
         }
     }
@@ -145,21 +171,18 @@ class HomeViewModel @Inject constructor(
     ) {
         _state.update { it.copy(isLoading = true) }
 
-        useCase.getArenaList(
+        val response = useCase.getArenaListFromApi(
             search = query,
             offset = _state.value.offset,
             limit = _state.value.limit,
             date = date,
             location = location,
             isGpsEnabled = isLocationEnabled
-        ).fold(
-            onSuccess = { result ->
-                _state.update { it.copy(arenaList = result.arenas) }
-            },
-            onFailure = { error ->
-                _effect.send(HomeEffect.ShowError(error.message ?: "Network Error"))
-            }
         )
+        response.onFailure { error ->
+            _effect.send(HomeEffect.ShowError(error.message ?: "Sync Failed"))
+        }
         _state.update { it.copy(isLoading = false) }
     }
+
 }

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -59,6 +60,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -119,7 +121,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 fun FutsalHomeScreenRoute(
     snackbarHostState: SnackbarHostState,
     onLogout: () -> Unit,
-    arenaClicked: (Arenas) -> Unit
+    arenaClicked: (String) -> Unit
 ) {
     val viewmodel = hiltViewModel<HomeViewModel>()
     val context = LocalContext.current
@@ -145,6 +147,7 @@ fun FutsalHomeScreenRoute(
         viewmodel.effect.collect { e ->
             when (e) {
                 is HomeEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+
                 is HomeEffect.NavigateToMyBooking -> {
                     // Handle navigation
                 }
@@ -166,7 +169,7 @@ fun FutsalHomeScreenRoute(
                 }
 
                 is HomeEffect.NavigateToBookingWithArea -> {
-                    arenaClicked(e.arena)
+                    arenaClicked(e.arena.id)
                 }
             }
         }
@@ -190,9 +193,22 @@ fun FutsalHomeScreen(
     val pullToRefreshState = rememberPullToRefreshState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         state = rememberTopAppBarState()
     )
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val lastItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastItem != null && lastItem.index == listState.layoutInfo.totalItemsCount - 1
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore.value) {
+        if (shouldLoadMore.value && !state.isLoading && state.arenaList?.isNotEmpty() == true) {
+            onIntent(HomeIntent.LoadNextPage)
+        }
+    }
 
     if (state.showLogoutDialog) {
         LogoutConfirmationDialog(
@@ -287,6 +303,7 @@ fun FutsalHomeScreen(
                 }
             ) {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(bottom = 24.dp)
@@ -496,7 +513,7 @@ fun LazyListScope.arenasListSection(
 
     items(
         items = arenas,
-        key = { arena -> arena.id!! }
+        key = { arena -> arena.id }
     ) { arena ->
         Column(
             modifier = Modifier

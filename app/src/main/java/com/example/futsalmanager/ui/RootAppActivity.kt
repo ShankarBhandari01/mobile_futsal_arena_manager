@@ -3,6 +3,7 @@ package com.example.futsalmanager.ui
 import FutsalHomeScreenRoute
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -39,6 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class RootAppActivity : ComponentActivity() {
     private val viewModel: LoginRegisterViewModel by viewModels()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -160,17 +162,23 @@ fun AppRoot() {
                                 }
                             }
                         },
-                        arenaClicked = { arena ->
-                            navController.navigate(Routes.BOOKING)
+                        arenaClicked = { arenaId ->
+                            Log.d("arenaId", arenaId)
+
+                            navController.navigate(Routes.bookingScreen(arenaId))
                         }
                     )
                 }
 
                 composable(
-                    route = Routes.BOOKING
+                    route = Routes.BOOKING,
+                    arguments = listOf(navArgument("id") {
+                        type = NavType.StringType
+                    })
                 ) {
                     BookingScreenRoute(
-                        snackbarHostState = snackbarHostState
+                        snackbarHostState = snackbarHostState,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
             }
