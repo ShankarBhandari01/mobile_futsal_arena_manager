@@ -3,8 +3,11 @@ package com.example.futsalmanager.domain.usecase
 import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.model.LocationModel
+import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.repository.HomeRepository
 import com.example.futsalmanager.domain.repository.LocationRepository
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,6 +59,24 @@ class HomeUseCase @Inject constructor(
 
     val arenas = repo.getArenaListFromDB()
 
-    fun areanaById(id: String) = repo.getArenaById(id)
+    fun arenaById(id: String) = repo.getArenaWithCourts(id)
 
+    suspend fun refreshArenaDetailsWithCourts(id: String) {
+        repo.getArenaById(id)
+            .filterNotNull()
+            .first()
+            .subdomain
+            ?.let {
+                repo.arenasSubDomainCourts(it)
+            }
+    }
+
+    suspend fun getCourtSlots(
+        subDomain: String,
+        courtId: String,
+        date: String,
+        includeStatus: Boolean
+    ):Result<List<Slot>> {
+        return repo.getCourtSlots(subDomain, courtId, date, includeStatus)
+    }
 }

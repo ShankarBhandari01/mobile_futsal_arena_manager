@@ -5,5 +5,6 @@ enum class ApiExceptionTypes {
     EMAIL_NOT_VERIFIED,
     CONFLICT,
     INVALID_OTP,
-    SESSION_INVALID
+    SESSION_INVALID,
+    INTERNAL_ERROR
 }

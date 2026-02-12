@@ -2,14 +2,14 @@ package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,26 +21,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.HistoryEdu
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -48,18 +54,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -73,6 +82,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.futsalmanager.R
+import com.example.futsalmanager.core.utils.Common.toDisplayDate
+import com.example.futsalmanager.core.utils.Common.toDisplayTime
+import com.example.futsalmanager.domain.model.Courts
+import com.example.futsalmanager.domain.model.PaymentMethod
+import com.example.futsalmanager.domain.model.Slot
+import com.example.futsalmanager.domain.model.SlotStatus
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
@@ -104,6 +119,13 @@ fun ArenaBookingScreen(
     onIntent: (BookingIntent) -> Unit = {},
     onBackClick: () -> Unit
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(state.selectedSlot) {
+        if (state.selectedSlot != null) {
+            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -162,15 +184,39 @@ fun ArenaBookingScreen(
 
             item {
                 BookingSelectionCard(
+                    state = state,
                     onCourtSelected = {
-
+                        onIntent(BookingIntent.SelectCourt(it))
+                    },
+                    onDateSelected = {
+                        onIntent(BookingIntent.SelectDate(it))
                     }
+
                 )
             }
 
             // 4. Time Slots
             item {
-                AvailableSlotsSection()
+                AvailableSlotsSection(
+                    state = state,
+                    onSlotSelected = { slot ->
+                        slot.isSelected = true
+                        onIntent(BookingIntent.SelectSlot(slot))
+                    }
+                )
+            }
+
+            if (state.selectedSlot != null) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    PaymentSection(
+                        state = state,
+                        selectedMethod = state.selectedPaymentMethod,
+                        onMethodSelected = { method ->
+                            onIntent(BookingIntent.SelectPaymentMethod(method))
+                        }
+                    )
+                }
             }
         }
     }
@@ -277,51 +323,6 @@ fun InfoBadge(icon: ImageVector, label: String) {
     }
 }
 
-@Composable
-fun Badge(name: String) {
-    Surface(
-        color = Color(0xFFF1F3F4), // Light gray background
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.padding(4.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Public,
-                contentDescription = null,
-                tint = Color.Gray,
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = name,
-                color = Color.DarkGray,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-fun HorizontalDateSelector() {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(7) { day ->
-            Column(
-                modifier = Modifier
-                    .width(60.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Mon", fontSize = 12.sp, color = Color.Gray)
-                Text("${9 + day}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-        }
-    }
-}
 
 @Composable
 fun RecurringBookingBanner() {
@@ -361,50 +362,333 @@ fun RecurringBookingBanner() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BookingSelectionCard(
-    state: BookingState = BookingState(),
-    onCourtSelected: (String) -> Unit
+    state: BookingState,
+    onCourtSelected: (Courts) -> Unit = {},
+    onDateSelected: (LocalDate) -> Unit = {}
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedCourt by remember { mutableStateOf("Court 1") }
-    val courts = listOf("Court 1", "Court 2", "Court A", "Court B")
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val courts = state.courts ?: emptyList()
+    var selectedCourtId by remember { mutableStateOf(courts.firstOrNull()?.id) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Select Court & Date", fontWeight = FontWeight.Bold)
-
-        // Court Selector (Dropdown)
-        OutlinedCard(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // --- Header Section ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Text(
+                text = "Select Court & Date",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Step 1 of 3",
+                style = MaterialTheme.typography.bodySmall,
+                color = BrandGreen,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // --- Date Selection (Horizontal Strip) ---
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Available Dates", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp)
             ) {
-                Text(selectedCourt)
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-            }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                courts.forEach { court ->
-                    DropdownMenuItem(
-                        text = { Text(court) },
+                items(7) { i ->
+                    val date = LocalDate.now().plusDays(i.toLong())
+                    DateItem(
+                        date = date,
+                        isSelected = date == selectedDate,
                         onClick = {
-                            selectedCourt = court
-                            expanded = false
-                            onCourtSelected(court)
+                            selectedDate = date
+                            onDateSelected(date)
                         }
                     )
                 }
             }
         }
 
-        // Date Selector (Horizontal Scroll)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(14) { i ->
-                val date = LocalDate.now().plusDays(i.toLong())
-                DateItem(date = date, isSelected = i == 0)
+        // --- Court Selection (Visual Grid/List) ---
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Select Courts", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
 
+            courts.forEach { court ->
+
+                val isSelected = selectedCourtId == court!!.id
+                Surface(
+                    onClick = {
+                        selectedCourtId = court.id
+                        onCourtSelected(court)
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) LightGreenBG else Color.White,
+                    border = BorderStroke(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.5f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Small icon representing court type
+                        Surface(
+                            shape = CircleShape,
+                            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SportsSoccer,
+                                contentDescription = null,
+                                tint = if (isSelected) Color.White else Color.Gray,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.width(16.dp))
+
+                        Column(Modifier.weight(1f)) {
+                            Text(court.name, fontWeight = FontWeight.Bold)
+                            Text("${court.type} Floor", fontSize = 12.sp, color = Color.Gray)
+                        }
+
+                        Text(
+                            text = "Rs ${court.basePrice}/hr",
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (isSelected) BrandGreen else Color.Black
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun DateItem(
+    date: LocalDate,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val dayName = date.dayOfWeek.name.take(3) // MON, TUE
+    val dayNumber = date.dayOfMonth.toString()
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) BrandGreen else Color.White,
+        border = if (isSelected) null else BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+        tonalElevation = if (isSelected) 4.dp else 0.dp,
+        modifier = Modifier.width(65.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = dayName,
+                fontSize = 12.sp,
+                color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Gray
+            )
+            Text(
+                text = dayNumber,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected) Color.White else Color.Black
+            )
+            // Dot indicator for "Today"
+            if (date == LocalDate.now()) {
+                Box(
+                    Modifier
+                        .size(4.dp)
+                        .clip(CircleShape)
+                        .background(if (isSelected) Color.White else BrandGreen)
+                )
+
+            }
+        }
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AvailableSlotsSection(
+    state: BookingState = BookingState(),
+    onSlotSelected: (Slot) -> Unit = {}
+) {
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // --- Header Section ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Available Slots - ${state.selectedDate.toDisplayDate()}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Step 2 of 3",
+                style = MaterialTheme.typography.bodySmall,
+                color = BrandGreen,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if (state.availableSlots.isEmpty() && !state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "No slots available for this date.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+        } else {
+            // Horizontal Row of Time Cards
+
+          /*  TimeSlotGrid(
+                slots = state.availableSlots,
+                selectedSlot = state.selectedSlot,
+                onSlotSelected = onSlotSelected
+            )*/
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp)
+            ) {
+
+                items(state.availableSlots) { slot ->
+                    TimeSlotCard(
+                        slot = slot,
+                        isSelected = state.selectedSlot?.start == slot.start,
+                        status = when (slot.status) {
+                            "AVAILABLE" -> SlotStatus.AVAILABLE.toString().uppercase()
+                            "BOOKED" -> SlotStatus.BOOKED.toString().uppercase()
+                            else -> SlotStatus.UNAVAILABLE.toString().uppercase()
+                        },
+                        onClick = {
+                            onSlotSelected(slot)
+                        }
+                    )
+                }
+
+            }
+
+            StatusLegend()
+        }
+
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun TimeSlotCard(
+    slot: Slot,
+    isSelected: Boolean = false,
+    status: String = SlotStatus.AVAILABLE.toString().uppercase(),
+    onClick: () -> Unit
+) {
+
+    val disabled = status == SlotStatus.UNAVAILABLE.toString().uppercase()
+
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1f,
+        label = ""
+    )
+
+    val borderColor by animateColorAsState(
+        if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+        label = ""
+    )
+
+    val bgColor by animateColorAsState(
+        if (isSelected) BrandGreen.copy(alpha = 0.08f) else Color.White,
+        label = ""
+    )
+
+    Surface(
+        onClick = { if (!disabled) onClick() },
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = animatedScale
+                scaleY = animatedScale
+            }
+            .size(width = 115.dp, height = 105.dp)
+            .alpha(if (disabled) 0.4f else 1f),
+        shape = RoundedCornerShape(16.dp),
+        tonalElevation = 3.dp,
+        shadowElevation = 5.dp,
+        color = bgColor,
+        border = BorderStroke(1.dp, borderColor)
+    ) {
+
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Column {
+                Text(
+                    slot.start.toDisplayTime(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    slot.end.toDisplayTime(),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                if (slot.pricingBadge.isNotEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = BrandGreen.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            slot.pricingBadge,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = BrandGreen,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    "Rs ${slot.price}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = if (isSelected) BrandGreen else Color.Black
+                )
             }
         }
     }
@@ -412,73 +696,210 @@ fun BookingSelectionCard(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DateItem(date: LocalDate, isSelected: Boolean) {
-    val bgColor = if (isSelected) BrandGreen else Color.White
-    val textColor = if (isSelected) Color.White else Color.Black
-
-    Card(
-        modifier = Modifier.width(60.dp),
-        colors = CardDefaults.cardColors(containerColor = bgColor),
-        border = if (!isSelected) BorderStroke(1.dp, Color.LightGray) else null
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = 12.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                date.dayOfWeek.name.take(3),
-                fontSize = 11.sp,
-                color = textColor.copy(alpha = 0.7f)
-            )
-            Text(
-                date.dayOfMonth.toString(),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = textColor
-            )
-        }
-    }
-}
-
-@Composable
-fun AvailableSlotsSection(
-    state: BookingState = BookingState(),
+fun TimeSlotGrid(
+    slots: List<Slot>,
+    selectedSlot: Slot?,
+    onSlotSelected: (Slot) -> Unit
 ) {
-    val morningSlots = listOf("06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM")
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Available Slots", fontWeight = FontWeight.Bold)
-
-        Text("Morning", color = Color.Gray, fontSize = 14.sp)
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            maxItemsInEachRow = 3,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            morningSlots.forEach { time ->
-                TimeSlotChip(time)
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        items(slots) { slot ->
+            TimeSlotCard(
+                slot = slot,
+                isSelected = slot == selectedSlot,
+                status = slot.status
+            ) {
+                onSlotSelected(slot)
             }
         }
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TimeSlotChip(time: String) {
-    Surface(
-        modifier = Modifier.width(100.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.LightGray),
-        color = Color.White
+fun PaymentSection(
+    state: BookingState,
+    selectedMethod: PaymentMethod,
+    onMethodSelected: (PaymentMethod) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF1F3F4).copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // --- Header Section ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Payment Method",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Step 3 of 3",
+                style = MaterialTheme.typography.bodySmall,
+                color = BrandGreen,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        // Summary Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    "${state.selectedSlot?.start?.toDisplayTime()} - ${state.selectedSlot?.end?.toDisplayTime()}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+
+                Text(
+                    state.selectedCourt?.name ?: "",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            }
+
+            Text(
+                "$${state.selectedCourt?.basePrice}",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 22.sp
+            )
+        }
+
+
         Text(
-            text = time,
-            modifier = Modifier.padding(8.dp),
-            textAlign = TextAlign.Center,
-            fontSize = 13.sp
+            state.selectedPaymentMethod.toString(),
+            style = MaterialTheme.typography.labelLarge,
+            color = Color.Gray
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PaymentOptionCard(
+                modifier = Modifier.weight(1f),
+                title = "Pay Online",
+                subtitle = "Instant confirmation",
+                icon = Icons.Default.CreditCard,
+                isSelected = selectedMethod == PaymentMethod.ONLINE,
+                onClick = { onMethodSelected(PaymentMethod.ONLINE) }
+            )
+            PaymentOptionCard(
+                modifier = Modifier.weight(1f),
+                title = "Pay Cash",
+                subtitle = "Pay at venue",
+                icon = Icons.Default.Payments,
+                isSelected = selectedMethod == PaymentMethod.CASH,
+                onClick = { onMethodSelected(PaymentMethod.CASH) }
+            )
+            PaymentOptionCard(
+                modifier = Modifier.weight(1f),
+                title = "Bank Transfer",
+                subtitle = "Manual verification",
+                icon = Icons.Default.AccountBalance,
+                isSelected = selectedMethod == PaymentMethod.BANK,
+                onClick = { onMethodSelected(PaymentMethod.BANK) }
+            )
+        }
+
+        // Final Action Button
+        Button(
+            onClick = { /* Process Booking */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
+        ) {
+            Icon(Icons.Default.CreditCard, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Reserve & Pay Online", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun StatusLegend() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        LegendItem(Color(0xFFC8E6C9), "Available")
+        LegendItem(Color(0xFFFFF9C4), "On Hold")
+        LegendItem(Color(0xFFFFCDD2), "Booked")
+        LegendItem(Color(0xFFE0E0E0), "Unavailable")
+    }
+}
+
+@Composable
+fun LegendItem(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(label, fontSize = 12.sp, color = Color.Gray)
+    }
+}
+
+@Composable
+fun PaymentOptionCard(
+    modifier: Modifier,
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(110.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) Color.White else Color.Transparent,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, null, tint = if (isSelected) Color.Black else Color.Gray)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                subtitle,
+                fontSize = 10.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                lineHeight = 12.sp
+            )
+        }
     }
 }
 

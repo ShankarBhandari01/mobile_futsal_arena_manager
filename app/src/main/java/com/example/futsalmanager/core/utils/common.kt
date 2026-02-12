@@ -1,6 +1,8 @@
 package com.example.futsalmanager.core.utils
 
+import android.os.Build
 import android.util.Patterns
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -19,6 +21,10 @@ import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.ui.login.AuthState
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetState
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 object Common {
@@ -84,5 +90,25 @@ object Common {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun String.toDisplayTime(): String {
+        if (this.isEmpty()) return ""
+        return Instant.parse(this)
+            .atZone(ZoneId.systemDefault())   // converts UTC → local
+            .format(DateTimeFormatter.ofPattern("hh:mm a"))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun String.toDisplayDate(): String {
+        val date = try {
+            Instant.parse(this)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+        } catch (e: Exception) {
+            LocalDate.parse(this)
+        }
+
+        return date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
+    }
 
 }

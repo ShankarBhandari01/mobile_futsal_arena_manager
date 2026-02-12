@@ -3,7 +3,6 @@ package com.example.futsalmanager.ui.home.viewModels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.domain.model.FilterParams
 import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.usecase.HomeUseCase
@@ -13,7 +12,6 @@ import com.example.futsalmanager.ui.home.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +33,6 @@ class HomeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private var arenaId = savedStateHandle.get<String>("id") ?: ""
 
     private val _state = MutableStateFlow(HomeState())
 
@@ -58,6 +55,7 @@ class HomeViewModel @Inject constructor(
     init {
 
         observeSearchAndFilters()
+
 
         useCase.observerLocationStatus.onEach { isEnabled ->
             _state.update {

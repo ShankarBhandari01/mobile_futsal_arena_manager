@@ -25,5 +25,12 @@ data class Arenas(
     val name: String? = null,
     val primaryColor: String? = null,
     val subdomain: String? = null,
-    val timezone: String? = null
+    val timezone: String? = null,
+    val stripePublishableKey:String? = null,
+    val bankAccountName: String? = null,
+    val bankAccountNumber: String? = null,
+    val bankBranch: String?=null,
+    val bankName:String?=null,
+    val bankPaymentRemarks:String?=null,
+    val bankSwiftCode:String?=null,
 )

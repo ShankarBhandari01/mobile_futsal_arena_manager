@@ -13,6 +13,10 @@ object ApiRegistry {
     const val RESET_PASSWORD = "auth/reset-password"
     const val VERIFY_EMAIL = "auth/verify-email"
 
+    //booking
+    const val COURTS = "courts"
+    const val SLOT = "slots"
+
     // home api
     const val ARENA_LIST = "discover/arenas"
 
