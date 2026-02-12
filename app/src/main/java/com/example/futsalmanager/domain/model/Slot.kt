@@ -11,4 +11,11 @@ data class Slot(
     val start: String,
     val status: String,
     var isSelected: Boolean? = false
-)
+){
+    val slotStatus: SlotStatus
+        get() = try {
+            SlotStatus.valueOf(status.uppercase())
+        } catch (e: Exception) {
+            SlotStatus.UNAVAILABLE // Fallback for unknown statuses
+        }
+}

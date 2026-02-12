@@ -37,6 +37,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        // backward compatibility
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -49,6 +52,8 @@ android {
 }
 
 dependencies {
+    // backward compatibility library like instant, LocalDate,LocalTime
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     //room
     implementation("androidx.room:room-runtime:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")

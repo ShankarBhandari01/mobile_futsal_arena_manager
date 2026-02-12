@@ -1,6 +1,6 @@
 package com.example.futsalmanager.ui.home.viewModels
 
-import androidx.lifecycle.SavedStateHandle
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.domain.model.FilterParams
@@ -10,6 +10,8 @@ import com.example.futsalmanager.ui.home.HomeEffect
 import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.home.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -27,12 +31,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val useCase: HomeUseCase,
-    savedStateHandle: SavedStateHandle,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
-
 
     private val _state = MutableStateFlow(HomeState())
 
@@ -41,7 +45,6 @@ class HomeViewModel @Inject constructor(
         currentState.copy(
             arenaList = arenaList, isLoading = false
         )
-
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -51,28 +54,37 @@ class HomeViewModel @Inject constructor(
     private val _effect = Channel<HomeEffect>(capacity = Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-
     init {
 
+        combine(
+            useCase.observerLocationStatus,
+            _state.map {
+                it.isPermissionGranted
+            }.distinctUntilChanged()
+
+        ) { isEnabled, isGranted ->
+            Pair(isEnabled, isGranted)
+        }
+            .flatMapLatest { (isEnabled, isGranted) ->
+                _state.update { it.copy(isLocationEnabled = isEnabled) }
+
+                if (isEnabled && isGranted) {
+                    useCase.userLocation.distinctUntilChanged()
+                } else {
+                    flowOf(null)
+                }
+            }
+            .onEach { loc ->
+                _state.update { it.copy(location = loc) }
+            }
+            .launchIn(viewModelScope)
+
         observeSearchAndFilters()
-
-
-        useCase.observerLocationStatus.onEach { isEnabled ->
-            _state.update {
-                it.copy(isLocationEnabled = isEnabled)
-            }
-        }.launchIn(viewModelScope)
-
-        useCase.userLocation.distinctUntilChanged().onEach { loc ->
-            _state.update {
-                it.copy(location = loc)
-            }
-        }.launchIn(viewModelScope)
     }
 
     @OptIn(FlowPreview::class)
     private fun observeSearchAndFilters() {
-        state.map {
+        _state.map {
             FilterParams(
                 query = it.search,
                 date = it.date,
@@ -136,6 +148,13 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.ArenaClicked -> viewModelScope.launch {
                 _effect.send(HomeEffect.NavigateToBookingWithArea(intent.arena))
             }
+
+            is HomeIntent.OnPermissionsGranted ->
+                _state.update {
+                    it.copy(isPermissionGranted = true)
+                }
+
+
             // Group navigation intents together
             HomeIntent.MarketPlaceClicked, HomeIntent.MyBookingClicked, HomeIntent.MyProfileClicked, HomeIntent.ConfirmLogout -> handleNavigation(
                 intent
@@ -166,21 +185,27 @@ class HomeViewModel @Inject constructor(
         date: String,
         location: LocationModel?,
         isLocationEnabled: Boolean = false
+
     ) {
         _state.update { it.copy(isLoading = true) }
-
-        val response = useCase.getArenaListFromApi(
-            search = query,
-            offset = _state.value.offset,
-            limit = _state.value.limit,
-            date = date,
-            location = location,
-            isGpsEnabled = isLocationEnabled
-        )
-        response.onFailure { error ->
-            _effect.send(HomeEffect.ShowError(error.message ?: "Sync Failed"))
+        try {
+            val response = useCase.getArenaListFromApi(
+                search = query,
+                offset = _state.value.offset,
+                limit = _state.value.limit,
+                date = date,
+                location = location,
+                isGpsEnabled = isLocationEnabled
+            )
+            response.onFailure { error ->
+                _effect.send(HomeEffect.ShowError(error.message ?: "Sync Failed"))
+            }
+        } catch (e: Exception) {
+            _effect.send(HomeEffect.ShowError(e.message ?: "Sync Failed"))
+        } finally {
+            _state.update { it.copy(isLoading = false) }
         }
-        _state.update { it.copy(isLoading = false) }
+
     }
 
 }

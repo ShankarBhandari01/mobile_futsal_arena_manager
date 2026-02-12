@@ -4,10 +4,9 @@
     <style name="Theme.FutsalManager" parent="android:Theme.Material.Light.NoActionBar" />
 
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/brand_green</item>
-
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_app_logo</item>
-
+        <item name="windowSplashScreenBackground">#58C472</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_f_logo</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
         <item name="postSplashScreenTheme">@style/Theme.FutsalManager</item>
     </style>
 </resources>

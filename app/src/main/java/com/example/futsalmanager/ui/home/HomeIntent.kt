@@ -15,5 +15,8 @@ sealed interface HomeIntent {
     object EnableLocationClicked : HomeIntent
     object DismissLogoutDialog : HomeIntent
     object ConfirmLogout : HomeIntent
-    object LoadNextPage: HomeIntent
+    object LoadNextPage : HomeIntent
+
+    object OnPermissionsGranted : HomeIntent
+
 }

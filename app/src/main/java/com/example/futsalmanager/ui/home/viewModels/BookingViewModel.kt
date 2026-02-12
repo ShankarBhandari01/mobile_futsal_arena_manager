@@ -3,6 +3,8 @@ package com.example.futsalmanager.ui.home.viewModels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.futsalmanager.core.utils.Common.toDisplayDate
+import com.example.futsalmanager.core.utils.Common.toDisplayTime
 import com.example.futsalmanager.domain.usecase.HomeUseCase
 import com.example.futsalmanager.ui.home.booking.BookingEffect
 import com.example.futsalmanager.ui.home.booking.BookingIntent
@@ -11,9 +13,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,24 +38,8 @@ class BookingViewModel @Inject constructor(
     init {
         loadArenaAndCourts()
         observeArenaWithCourts()
-    }
-
-    private fun observeCourtSlots() = viewModelScope.launch {
-        useCase.getCourtSlots(
-            subDomain = _state.value.arena?.subdomain ?: "sitapaila",
-            courtId = _state.value.selectedCourt?.id ?: "e34d9e0-1585-497b-9c32-8ad78a8de6da",
-            date = _state.value.selectedDate,
-            includeStatus = true
-        ).fold(
-            onSuccess = { slots ->
-                _state.update { it.copy(availableSlots = slots) }
-            },
-            onFailure = {
-                _effect.send(
-                    BookingEffect.ShowError(it.message ?: "Failed to load court slots")
-                )
-            }
-        )
+        observeSlotRequests()
+        observeDisplayTime()
     }
 
     private fun loadArenaAndCourts() = viewModelScope.launch {
@@ -80,6 +69,60 @@ class BookingViewModel @Inject constructor(
 
     }
 
+    private fun observeSlotRequests() {
+        viewModelScope.launch {
+            _state
+                .map { it.selectedCourt?.id to it.selectedDate }
+                .distinctUntilChanged()
+                .collect { (courtId, date) ->
+
+                    if (courtId == null) return@collect
+
+                    loadSlots(courtId, date)
+                }
+        }
+    }
+
+    private suspend fun loadSlots(courtId: String, date: LocalDate) {
+
+        val subDomain = _state.value.arena?.subdomain ?: return
+
+        useCase.getCourtSlots(
+            subDomain = subDomain,
+            courtId = courtId,
+            date = date.toString(),
+            includeStatus = true
+        ).fold(
+            onSuccess = { slots ->
+                _state.update { it.copy(availableSlots = slots) }
+            },
+            onFailure = {
+                _effect.send(
+                    BookingEffect.ShowError(it.message ?: "Failed to load court slots")
+                )
+            }
+        )
+    }
+
+    private fun observeDisplayTime() {
+        viewModelScope.launch {
+            _state
+                .map { it.selectedDate to it.selectedSlot }
+                .distinctUntilChanged()
+                .collect { (date, slot) ->
+                    if (slot == null) return@collect
+
+                    _state.update {
+                        it.copy(
+                            displayDate = date.toString().toDisplayDate(),
+                            displayStartTime = slot.start.toDisplayTime(),
+                            displayEndTime = slot.end.toDisplayTime()
+                        )
+                    }
+                }
+        }
+    }
+
     fun dispatch(intent: BookingIntent) {
         when (intent) {
             is BookingIntent.SelectSlot -> {
@@ -95,12 +138,11 @@ class BookingViewModel @Inject constructor(
             }
 
             is BookingIntent.SelectCourt -> {
-                _state.update { it.copy(selectedCourt = intent.courtId) }
-                observeCourtSlots()
+                _state.update { it.copy(selectedCourt = intent.court) }
             }
 
             is BookingIntent.SelectDate -> {
-                _state.update { it.copy(selectedDate = intent.date.toString()) }
+                _state.update { it.copy(selectedDate = intent.date) }
             }
 
         }

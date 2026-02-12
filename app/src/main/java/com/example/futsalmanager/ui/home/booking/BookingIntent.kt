@@ -9,6 +9,6 @@ sealed interface BookingIntent {
     object BookingButton : BookingIntent
     data class SelectPaymentMethod(val method: PaymentMethod) : BookingIntent
     data class SelectSlot(val slot: Slot) : BookingIntent
-    data class SelectCourt(val courtId: Courts) : BookingIntent
+    data class SelectCourt(val court: Courts) : BookingIntent
     data class SelectDate(val date: LocalDate) : BookingIntent
 }

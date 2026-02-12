@@ -1,5 +1,10 @@
 package com.example.futsalmanager.ui.component
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -29,6 +34,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Visibility
@@ -49,6 +55,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -58,14 +65,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -75,6 +83,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -101,6 +110,10 @@ import com.example.futsalmanager.ui.login.AuthMode
 import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
 import com.example.futsalmanager.ui.theme.WarningYellowBG
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.shouldShowRationale
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -946,5 +959,173 @@ fun EmptyStateComponent(
 @Preview(showBackground = true)
 @Composable
 fun LocationBannerPreview() {
-    LocationSuccessBanner()
+    LocationPermissionSheet(false, onConfirm = {}, onDismiss = {})
+
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocationPermissionSheet(
+    isPermanentlyDenied: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        Color(0xFF58C472).copy(alpha = 0.12f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = Color(0xFF58C472),
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = if (isPermanentlyDenied)
+                    "Turn on location"
+                else
+                    "Find nearby arenas",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = if (isPermanentlyDenied) {
+                    "Location access is disabled. Enable it in Settings to discover courts near you."
+                } else {
+                    "We use your location to show the closest futsal arenas and faster booking."
+                },
+                textAlign = TextAlign.Center,
+                color = Color.Gray
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = onConfirm,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF58C472)
+                )
+            ) {
+                Text(
+                    if (isPermanentlyDenied) "Open Settings" else "Allow Access"
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            TextButton(onClick = onDismiss) {
+                Text("Not now")
+            }
+
+            Spacer(Modifier.height(12.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun HomePermissionWrapper(
+    onPermissionChanged: (Boolean) -> Unit,
+    content: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+    val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+    } else {
+        listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+    }
+
+    val permissionState = rememberMultiplePermissionsState(permissionsToRequest)
+    var hasRequestedPermission by rememberSaveable { mutableStateOf(false) }
+    var userDismissed by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(permissionState.allPermissionsGranted) {
+        onPermissionChanged(permissionState.allPermissionsGranted)
+    }
+
+    val permanentlyDenied = permissionState.permissions.any {
+        !it.status.isGranted && !it.status.shouldShowRationale
+    } && hasRequestedPermission
+
+    val locationGranted = permissionState.permissions
+        .filter { it.permission.contains("LOCATION") }
+        .all { it.status.isGranted }
+
+    Box(Modifier.fillMaxSize()) {
+        content()
+
+        if (!locationGranted && !userDismissed) {
+            val locationRationale = permissionState.permissions
+                .filter { it.permission.contains("LOCATION") }
+                .any { it.status.shouldShowRationale }
+
+            val locationPermanentlyDenied = !locationRationale && hasRequestedPermission
+
+
+            when {
+                locationPermanentlyDenied -> {
+                    LocationPermissionSheet(
+                        isPermanentlyDenied = true,
+                        onConfirm = {
+                            val intent =
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            context.startActivity(intent)
+                        },
+                        onDismiss = { userDismissed = true }
+                    )
+                }
+
+                else -> {
+                    LocationPermissionSheet(
+                        isPermanentlyDenied = false,
+                        onConfirm = {
+                            hasRequestedPermission = true
+                            permissionState.launchMultiplePermissionRequest()
+                        },
+                        onDismiss = { userDismissed = true }
+                    )
+                }
+            }
+        }
+    }
+}
+

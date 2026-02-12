@@ -14,5 +14,6 @@ data class HomeState(
     val isLocationEnabled: Boolean = false,
     val isUsingHighAccuracy: Boolean = false,
     val location: LocationModel? = null,
-    val showLogoutDialog: Boolean = false
+    val showLogoutDialog: Boolean = false,
+    val isPermissionGranted: Boolean = false
 )

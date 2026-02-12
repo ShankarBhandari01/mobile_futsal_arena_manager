@@ -72,6 +72,10 @@ class LocationServiceImpl @Inject constructor(
             override fun onLocationResult(result: LocationResult) {
                 val bestLocation = result.lastLocation ?: result.locations.firstOrNull()
                 bestLocation?.let {
+                    Log.e(
+                        "LocationService",
+                        "Update failed: ${bestLocation.latitude}, ${bestLocation.longitude}"
+                    )
                     trySend(LocationModel(it.latitude, it.longitude))
                 }
             }

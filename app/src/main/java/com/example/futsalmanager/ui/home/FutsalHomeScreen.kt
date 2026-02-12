@@ -1,8 +1,6 @@
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.provider.Settings
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -85,13 +83,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.futsalmanager.core.utils.LocationUtils.launchLocationSettingsResolution
 import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.component.ArenaCard
 import com.example.futsalmanager.ui.component.ArenaShimmerItem
 import com.example.futsalmanager.ui.component.EmptyStateComponent
 import com.example.futsalmanager.ui.component.FutsalDatePickerField
 import com.example.futsalmanager.ui.component.GenericSegmentedToggle
+import com.example.futsalmanager.ui.component.HomePermissionWrapper
 import com.example.futsalmanager.ui.component.LocationSuccessBanner
 import com.example.futsalmanager.ui.component.LocationWarningBanner
 import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
@@ -105,7 +103,6 @@ import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
 import com.example.futsalmanager.ui.theme.OrangeText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -123,24 +120,10 @@ fun FutsalHomeScreenRoute(
     onLogout: () -> Unit,
     arenaClicked: (String) -> Unit
 ) {
+
     val viewmodel = hiltViewModel<HomeViewModel>()
     val context = LocalContext.current
     val state by viewmodel.state.collectAsStateWithLifecycle()
-
-
-    val settingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { _ -> }
-
-    val permissionState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    )
-    LaunchedEffect(Unit) {
-        permissionState.launchMultiplePermissionRequest()
-    }
 
 
     LaunchedEffect(viewmodel.effect) {
@@ -165,7 +148,8 @@ fun FutsalHomeScreenRoute(
                 }
 
                 is HomeEffect.NavigateToLocationSettings -> {
-                    launchLocationSettingsResolution(context, settingsLauncher)
+                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    context.startActivity(intent)
                 }
 
                 is HomeEffect.NavigateToBookingWithArea -> {
@@ -175,12 +159,20 @@ fun FutsalHomeScreenRoute(
         }
     }
 
-    FutsalHomeScreen(
-        state = state,
-        onIntent = viewmodel::dispatch
-    )
-}
+    HomePermissionWrapper(
+        onPermissionChanged = { isGranted ->
+            if (isGranted) {
+                viewmodel.dispatch(HomeIntent.OnPermissionsGranted)
+            }
+        }
+    ) {
+        FutsalHomeScreen(
+            state = state,
+            onIntent = viewmodel::dispatch
+        )
+    }
 
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

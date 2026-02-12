@@ -3,6 +3,7 @@ package com.example.futsalmanager.ui.home.booking
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -21,10 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,9 +53,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -82,7 +77,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.futsalmanager.R
-import com.example.futsalmanager.core.utils.Common.toDisplayDate
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.domain.model.PaymentMethod
@@ -120,12 +114,19 @@ fun ArenaBookingScreen(
     onBackClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
-    LaunchedEffect(state.selectedSlot) {
-        if (state.selectedSlot != null) {
-            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            Pair(state.selectedSlot, state.selectedCourt)
         }
+            .collect { (slot, court) ->
+                if (slot != null || court != null) {
+                    val totalItems = listState.layoutInfo.totalItemsCount
+                    if (totalItems > 0) {
+                        listState.animateScrollToItem(totalItems - 1)
+                    }
+                }
+            }
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -195,16 +196,19 @@ fun ArenaBookingScreen(
                 )
             }
 
-            // 4. Time Slots
-            item {
-                AvailableSlotsSection(
-                    state = state,
-                    onSlotSelected = { slot ->
-                        slot.isSelected = true
-                        onIntent(BookingIntent.SelectSlot(slot))
-                    }
-                )
+            // 4. Time Slots and courts
+            if (state.selectedCourt != null) {
+                item {
+                    AvailableSlotsSection(
+                        state = state,
+                        onSlotSelected = { slot ->
+                            slot.isSelected = true
+                            onIntent(BookingIntent.SelectSlot(slot))
+                        }
+                    )
+                }
             }
+
 
             if (state.selectedSlot != null) {
                 item {
@@ -359,16 +363,13 @@ fun RecurringBookingBanner() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @Composable
 fun BookingSelectionCard(
     state: BookingState,
     onCourtSelected: (Courts) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {}
 ) {
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    val courts = state.courts ?: emptyList()
-    var selectedCourtId by remember { mutableStateOf(courts.firstOrNull()?.id) }
 
     Column(
         modifier = Modifier
@@ -406,9 +407,8 @@ fun BookingSelectionCard(
                     val date = LocalDate.now().plusDays(i.toLong())
                     DateItem(
                         date = date,
-                        isSelected = date == selectedDate,
+                        isSelected = date == state.selectedDate,
                         onClick = {
-                            selectedDate = date
                             onDateSelected(date)
                         }
                     )
@@ -420,19 +420,20 @@ fun BookingSelectionCard(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Select Courts", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
 
-            courts.forEach { court ->
+            state.courts.forEach { court ->
+                val isSelected = state.selectedCourt == court
 
-                val isSelected = selectedCourtId == court!!.id
                 Surface(
                     onClick = {
-                        selectedCourtId = court.id
-                        onCourtSelected(court)
+                        onCourtSelected(court!!)
                     },
                     shape = RoundedCornerShape(12.dp),
                     color = if (isSelected) LightGreenBG else Color.White,
+
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.5f)
+                        color = if (isSelected) BrandGreen
+                        else Color.LightGray.copy(alpha = 0.5f)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -457,12 +458,12 @@ fun BookingSelectionCard(
                         Spacer(Modifier.width(16.dp))
 
                         Column(Modifier.weight(1f)) {
-                            Text(court.name, fontWeight = FontWeight.Bold)
+                            Text(court!!.name, fontWeight = FontWeight.Bold)
                             Text("${court.type} Floor", fontSize = 12.sp, color = Color.Gray)
                         }
 
                         Text(
-                            text = "Rs ${court.basePrice}/hr",
+                            text = "Rs ${court!!.basePrice}/hr",
                             fontWeight = FontWeight.ExtraBold,
                             color = if (isSelected) BrandGreen else Color.Black
                         )
@@ -474,7 +475,6 @@ fun BookingSelectionCard(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DateItem(
     date: LocalDate,
@@ -522,7 +522,6 @@ fun DateItem(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AvailableSlotsSection(
     state: BookingState = BookingState(),
@@ -537,7 +536,7 @@ fun AvailableSlotsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Available Slots - ${state.selectedDate.toDisplayDate()}",
+                "Available Slots - ${state.displayDate}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -562,35 +561,34 @@ fun AvailableSlotsSection(
                 )
             }
         } else {
-            // Horizontal Row of Time Cards
 
-          /*  TimeSlotGrid(
+            TimeSlotGrid(
                 slots = state.availableSlots,
                 selectedSlot = state.selectedSlot,
                 onSlotSelected = onSlotSelected
-            )*/
+            )
 
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 2.dp)
-            ) {
+            /*   LazyRow(
+                   horizontalArrangement = Arrangement.spacedBy(12.dp),
+                   contentPadding = PaddingValues(horizontal = 2.dp)
+               ) {
 
-                items(state.availableSlots) { slot ->
-                    TimeSlotCard(
-                        slot = slot,
-                        isSelected = state.selectedSlot?.start == slot.start,
-                        status = when (slot.status) {
-                            "AVAILABLE" -> SlotStatus.AVAILABLE.toString().uppercase()
-                            "BOOKED" -> SlotStatus.BOOKED.toString().uppercase()
-                            else -> SlotStatus.UNAVAILABLE.toString().uppercase()
-                        },
-                        onClick = {
-                            onSlotSelected(slot)
-                        }
-                    )
-                }
+                   items(state.availableSlots) { slot ->
+                       TimeSlotCard(
+                           slot = slot,
+                           isSelected = state.selectedSlot?.start == slot.start,
+                           status = when (slot.status) {
+                               "AVAILABLE" -> SlotStatus.AVAILABLE.toString().uppercase()
+                               "BOOKED" -> SlotStatus.BOOKED.toString().uppercase()
+                               else -> SlotStatus.UNAVAILABLE.toString().uppercase()
+                           },
+                           onClick = {
+                               onSlotSelected(slot)
+                           }
+                       )
+                   }
 
-            }
+               }*/
 
             StatusLegend()
         }
@@ -599,128 +597,186 @@ fun AvailableSlotsSection(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TimeSlotCard(
     slot: Slot,
     isSelected: Boolean = false,
-    status: String = SlotStatus.AVAILABLE.toString().uppercase(),
+    status: SlotStatus = SlotStatus.AVAILABLE,
     onClick: () -> Unit
 ) {
 
-    val disabled = status == SlotStatus.UNAVAILABLE.toString().uppercase()
+    val isBooked = status == SlotStatus.BOOKED
+    val isUnavailable = status == SlotStatus.UNAVAILABLE
+    val isDisabled = isBooked || isUnavailable
 
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
-        label = ""
-    )
+    // Animations
+    val animatedScale by animateFloatAsState(if (isSelected) 1.05f else 1f, label = "scale")
+    val elevation by animateDpAsState(if (isSelected) 8.dp else 2.dp, label = "elevation")
 
-    val borderColor by animateColorAsState(
-        if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
-        label = ""
-    )
+    // Dynamic Colors based on Enum Status
+    val contentColor = when {
+        isBooked -> Color(0xFFE57373) // Soft Red
+        isSelected -> BrandGreen
+        else -> Color.Black
+    }
 
-    val bgColor by animateColorAsState(
-        if (isSelected) BrandGreen.copy(alpha = 0.08f) else Color.White,
-        label = ""
+    val containerColor by animateColorAsState(
+        targetValue = when {
+            isBooked -> Color(0xFFFFEBEE)
+            isSelected -> BrandGreen.copy(alpha = 0.08f)
+            else -> Color.White
+        }, label = "bg"
     )
 
     Surface(
-        onClick = { if (!disabled) onClick() },
+        onClick = { if (!isDisabled) onClick() },
         modifier = Modifier
             .graphicsLayer {
                 scaleX = animatedScale
                 scaleY = animatedScale
             }
-            .size(width = 115.dp, height = 105.dp)
-            .alpha(if (disabled) 0.4f else 1f),
-        shape = RoundedCornerShape(16.dp),
-        tonalElevation = 3.dp,
-        shadowElevation = 5.dp,
-        color = bgColor,
-        border = BorderStroke(1.dp, borderColor)
+            .size(width = 120.dp, height = 110.dp)
+            .alpha(if (isUnavailable) 0.5f else 1f),
+        shape = RoundedCornerShape(20.dp),
+        color = containerColor,
+        tonalElevation = elevation,
+        shadowElevation = elevation,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = when {
+                isBooked -> Color(0xFFEF9A9A)
+                isSelected -> BrandGreen
+                else -> Color.LightGray.copy(alpha = 0.3f)
+            }
+        )
     ) {
+        Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Column {
-                Text(
-                    slot.start.toDisplayTime(),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    slot.end.toDisplayTime(),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+            // --- Pricing Badge / Status Badge ---
+            val badgeText = if (isBooked) "BOOKED" else slot.pricingBadge
+            if (badgeText.isNotEmpty() && !isUnavailable) {
+                Surface(
+                    color = if (isBooked) Color(0xFFEF5350) else BrandGreen,
+                    shape = RoundedCornerShape(bottomStart = 12.dp, topEnd = 16.dp),
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(
+                        text = badgeText,
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-
-                if (slot.pricingBadge.isNotEmpty()) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = BrandGreen.copy(alpha = 0.15f)
-                    ) {
+                // --- Time Section ---
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (isBooked) Color(0xFFE57373) else if (isSelected) BrandGreen else Color.Gray
+                        )
+                        Spacer(Modifier.width(4.dp))
                         Text(
-                            slot.pricingBadge,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = BrandGreen,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            text = slot.start.toDisplayTime(),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = contentColor
                         )
                     }
+                    Text(
+                        text = "to ${slot.end.toDisplayTime()}",
+                        fontSize = 11.sp,
+                        color = if (isBooked) Color(0xFFE57373).copy(alpha = 0.7f) else Color.Gray,
+                        modifier = Modifier.padding(start = 18.dp)
+                    )
                 }
 
-                Text(
-                    "Rs ${slot.price}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = if (isSelected) BrandGreen else Color.Black
-                )
+                // --- Price Section ---
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    if (isBooked) {
+                        Text(
+                            text = "Reserved",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE57373)
+                        )
+                    } else {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Rs",
+                                fontSize = 10.sp,
+                                color = if (isSelected) BrandGreen else Color.Gray,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = slot.price,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                color = contentColor,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TimeSlotGrid(
     slots: List<Slot>,
     selectedSlot: Slot?,
     onSlotSelected: (Slot) -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(16.dp)
+
+    val rows = slots.chunked(3)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(slots) { slot ->
-            TimeSlotCard(
-                slot = slot,
-                isSelected = slot == selectedSlot,
-                status = slot.status
+        rows.forEach { rowSlots ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                onSlotSelected(slot)
+                rowSlots.forEach { slot ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        TimeSlotCard(
+                            slot = slot,
+                            isSelected = slot == selectedSlot,
+                            status = slot.slotStatus,
+                            onClick = { onSlotSelected(slot) }
+                        )
+                    }
+                }
+                if (rowSlots.size < 3) {
+                    repeat(3 - rowSlots.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
 }
 
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PaymentSection(
     state: BookingState,
@@ -759,7 +815,7 @@ fun PaymentSection(
         ) {
             Column {
                 Text(
-                    "${state.selectedSlot?.start?.toDisplayTime()} - ${state.selectedSlot?.end?.toDisplayTime()}",
+                    "${state.displayStartTime} - ${state.displayEndTime}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -777,7 +833,6 @@ fun PaymentSection(
                 fontSize = 22.sp
             )
         }
-
 
         Text(
             state.selectedPaymentMethod.toString(),

@@ -1,8 +1,6 @@
 package com.example.futsalmanager.core.utils
 
-import android.os.Build
 import android.util.Patterns
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -90,15 +88,14 @@ object Common {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     fun String.toDisplayTime(): String {
         if (this.isEmpty()) return ""
         return Instant.parse(this)
-            .atZone(ZoneId.systemDefault())   // converts UTC → local
+            .atZone(ZoneId.systemDefault())
             .format(DateTimeFormatter.ofPattern("hh:mm a"))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun String.toDisplayDate(): String {
         val date = try {
             Instant.parse(this)
