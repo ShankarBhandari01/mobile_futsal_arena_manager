@@ -2,11 +2,17 @@ package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,42 +23,57 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +84,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -78,10 +98,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.futsalmanager.R
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
+import com.example.futsalmanager.core.utils.Common.toHourInt
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.domain.model.PaymentMethod
 import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.model.SlotStatus
+import com.example.futsalmanager.domain.model.TimeSegment
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
 import com.example.futsalmanager.ui.theme.LightGreenBG
@@ -113,6 +135,17 @@ fun ArenaBookingScreen(
     onIntent: (BookingIntent) -> Unit = {},
     onBackClick: () -> Unit
 ) {
+    var showRecurringDialog by remember { mutableStateOf(false) }
+
+    if (showRecurringDialog) {
+        RecurringBookingSheetContent(
+            courts = state.courts,
+            onConfirm = { court, frequency ->
+                onIntent(BookingIntent.SetupRecurring(court, frequency))
+                showRecurringDialog = false
+            }
+        )
+    }
     val listState = rememberLazyListState()
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -150,7 +183,8 @@ fun ArenaBookingScreen(
                 .background(Color(0xFFF8F9FA)),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        )
+        {
 
             item {
                 ArenaHeaderCard(state)
@@ -158,7 +192,9 @@ fun ArenaBookingScreen(
 
             item {
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 ) {
                     Column {
                         Text(
@@ -179,9 +215,12 @@ fun ArenaBookingScreen(
 
 
             item {
-                RecurringBookingBanner()
+                RecurringBookingBanner(
+                    onClick = {
+                        showRecurringDialog = true
+                    }
+                )
             }
-
 
             item {
                 BookingSelectionCard(
@@ -208,7 +247,6 @@ fun ArenaBookingScreen(
                     )
                 }
             }
-
 
             if (state.selectedSlot != null) {
                 item {
@@ -329,36 +367,80 @@ fun InfoBadge(icon: ImageVector, label: String) {
 
 
 @Composable
-fun RecurringBookingBanner() {
-    Box(
+fun RecurringBookingBanner(
+    onClick: () -> Unit = {}
+) {
+    Surface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .drawBehind {
-                val stroke = Stroke(
-                    width = 2.dp.toPx(),
-                    pathEffect = PathEffect
-                        .dashPathEffect(floatArrayOf(10f, 10f), 0f)
-                )
-                drawRoundRect(
-                    color = BrandGreen,
-                    style = stroke,
-                    cornerRadius = CornerRadius(12.dp.toPx())
-                )
-            }
-            .background(BrandGreen.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-            .padding(16.dp)
-            .clickable {
-
-            }
-
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = BrandGreen.copy(alpha = 0.05f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = BrandGreen.copy(0.2f)
+        )
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.EventRepeat, contentDescription = null, tint = BrandGreen)
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text("Recurring Booking", fontWeight = FontWeight.Bold, color = BrandGreen)
-                Text("Reserve your spot weekly with a single tap.", fontSize = 12.sp)
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .drawBehind {
+                    val stroke = Stroke(
+                        width = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    )
+                    drawRoundRect(
+                        color = BrandGreen.copy(alpha = 0.3f),
+                        style = stroke,
+                        cornerRadius = CornerRadius(16.dp.toPx())
+                    )
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(BrandGreen.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EventRepeat,
+                        contentDescription = null,
+                        tint = BrandGreen,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = "Recurring Booking",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandGreen
+                    )
+                    Text(
+                        text = "Reserve your spot weekly.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
             }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = BrandGreen.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -484,11 +566,18 @@ fun DateItem(
     val dayName = date.dayOfWeek.name.take(3) // MON, TUE
     val dayNumber = date.dayOfMonth.toString()
 
+    val contentColor = if (isSelected) BrandGreen else Color.Black
+    val subTextColor = if (isSelected) BrandGreen.copy(alpha = 0.7f) else Color.Gray
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) BrandGreen else Color.White,
-        border = if (isSelected) null else BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+        color = if (isSelected) BrandGreen.copy(alpha = 0.12f) else Color.White,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.4f)
+        ),
+        // Tonal elevation adds a slight shadow/depth
         tonalElevation = if (isSelected) 4.dp else 0.dp,
         modifier = Modifier.width(65.dp)
     ) {
@@ -499,44 +588,68 @@ fun DateItem(
             Text(
                 text = dayName,
                 fontSize = 12.sp,
-                color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Gray
+                color = subTextColor,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             Text(
                 text = dayNumber,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else Color.Black
+                color = contentColor
             )
+
+            Spacer(Modifier.height(4.dp))
+
             // Dot indicator for "Today"
             if (date == LocalDate.now()) {
                 Box(
                     Modifier
-                        .size(4.dp)
+                        .size(6.dp)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color.White else BrandGreen)
+                        .background(BrandGreen)
                 )
-
+            } else {
+                Spacer(Modifier.size(6.dp))
             }
         }
     }
 }
-
 
 @Composable
 fun AvailableSlotsSection(
     state: BookingState = BookingState(),
     onSlotSelected: (Slot) -> Unit = {}
 ) {
+    var selectedSegment by remember { mutableStateOf(TimeSegment.ALL) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val filteredSlots = remember(state.availableSlots, selectedSegment) {
+        state.availableSlots.filter { slot ->
+            val hour = slot.start.toHourInt()
+            when (selectedSegment) {
+                TimeSegment.MORNING -> hour in 5..11
+                TimeSegment.AFTERNOON -> hour in 12..16
+                TimeSegment.EVENING -> hour in 17..23
+                TimeSegment.ALL -> true
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         // --- Header Section ---
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Available Slots - ${state.displayDate}",
+                "Available Slots",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -547,6 +660,35 @@ fun AvailableSlotsSection(
                 fontWeight = FontWeight.Bold
             )
         }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(TimeSegment.entries.toTypedArray()) { segment ->
+                val isSelected = selectedSegment == segment
+                Surface(
+                    onClick = { selectedSegment = segment },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) BrandGreen else Color.White,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (isSelected) BrandGreen else Color.LightGray.copy(0.4f)
+                    ),
+                ) {
+                    Text(
+                        text = segment.label,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isSelected) Color.White else Color.Gray
+                    )
+                }
+            }
+        }
+
+        // --- 3. Empty State vs Grid ---
         if (state.availableSlots.isEmpty() && !state.isLoading) {
             Box(
                 modifier = Modifier
@@ -554,48 +696,30 @@ fun AvailableSlotsSection(
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No slots available for this date.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
+                Text("No slots available for this date.", color = Color.Gray)
+            }
+        } else if (filteredSlots.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No slots in the ${selectedSegment.label} period.", color = Color.Gray)
             }
         } else {
-
             TimeSlotGrid(
-                slots = state.availableSlots,
+                slots = filteredSlots,
                 selectedSlot = state.selectedSlot,
                 onSlotSelected = onSlotSelected
             )
 
-            /*   LazyRow(
-                   horizontalArrangement = Arrangement.spacedBy(12.dp),
-                   contentPadding = PaddingValues(horizontal = 2.dp)
-               ) {
-
-                   items(state.availableSlots) { slot ->
-                       TimeSlotCard(
-                           slot = slot,
-                           isSelected = state.selectedSlot?.start == slot.start,
-                           status = when (slot.status) {
-                               "AVAILABLE" -> SlotStatus.AVAILABLE.toString().uppercase()
-                               "BOOKED" -> SlotStatus.BOOKED.toString().uppercase()
-                               else -> SlotStatus.UNAVAILABLE.toString().uppercase()
-                           },
-                           onClick = {
-                               onSlotSelected(slot)
-                           }
-                       )
-                   }
-
-               }*/
-
-            StatusLegend()
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                StatusLegend()
+            }
         }
-
     }
 }
-
 
 @Composable
 fun TimeSlotCard(
@@ -604,67 +728,70 @@ fun TimeSlotCard(
     status: SlotStatus = SlotStatus.AVAILABLE,
     onClick: () -> Unit
 ) {
-
+    val isAvailable = status == SlotStatus.AVAILABLE
     val isBooked = status == SlotStatus.BOOKED
     val isUnavailable = status == SlotStatus.UNAVAILABLE
     val isDisabled = isBooked || isUnavailable
 
-    // Animations
-    val animatedScale by animateFloatAsState(if (isSelected) 1.05f else 1f, label = "scale")
-    val elevation by animateDpAsState(if (isSelected) 8.dp else 2.dp, label = "elevation")
 
-    // Dynamic Colors based on Enum Status
-    val contentColor = when {
-        isBooked -> Color(0xFFE57373) // Soft Red
-        isSelected -> BrandGreen
-        else -> Color.Black
-    }
-
+    // --- Colors ---
     val containerColor by animateColorAsState(
         targetValue = when {
-            isBooked -> Color(0xFFFFEBEE)
-            isSelected -> BrandGreen.copy(alpha = 0.08f)
+            isBooked -> Color(0xFFFFF2F2)
+            isSelected -> BrandGreen.copy(alpha = 0.12f)
+            isAvailable -> BrandGreen.copy(alpha = 0.22f)
             else -> Color.White
-        }, label = "bg"
+        },
+        label = "container"
     )
+
+    val borderColor = when {
+        isSelected -> BrandGreen
+        isBooked -> Color(0xFFE57373)
+        else -> Color.LightGray.copy(alpha = 0.25f)
+    }
+
+    val textColor = when {
+        isBooked -> Color(0xFFD32F2F)
+        isSelected -> BrandGreen
+        else -> Color(0xFF222222)
+    }
 
     Surface(
         onClick = { if (!isDisabled) onClick() },
         modifier = Modifier
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            }
-            .size(width = 120.dp, height = 110.dp)
-            .alpha(if (isUnavailable) 0.5f else 1f),
-        shape = RoundedCornerShape(20.dp),
+            .fillMaxWidth()
+            .alpha(if (isUnavailable) 0.45f else 1f),
+        shape = RoundedCornerShape(22.dp),
         color = containerColor,
-        tonalElevation = elevation,
-        shadowElevation = elevation,
-        border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = when {
-                isBooked -> Color(0xFFEF9A9A)
-                isSelected -> BrandGreen
-                else -> Color.LightGray.copy(alpha = 0.3f)
-            }
-        )
+        border = if (isSelected)
+            BorderStroke(1.5.dp, BrandGreen)
+        else BorderStroke(1.dp, borderColor)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
 
-            // --- Pricing Badge / Status Badge ---
-            val badgeText = if (isBooked) "BOOKED" else slot.pricingBadge
-            if (badgeText.isNotEmpty() && !isUnavailable) {
+        Box(Modifier.fillMaxSize()) {
+
+            // -------- Badge (top-right) --------
+            val badgeText = when {
+                isBooked -> "BOOKED"
+                slot.pricingBadge.isNotEmpty() -> slot.pricingBadge
+                else -> ""
+            }
+
+            if (badgeText.isNotEmpty()) {
                 Surface(
-                    color = if (isBooked) Color(0xFFEF5350) else BrandGreen,
-                    shape = RoundedCornerShape(bottomStart = 12.dp, topEnd = 16.dp),
+                    color = if (isBooked) Color(0xFFE57373) else BrandGreen,
+                    shape = RoundedCornerShape(
+                        bottomStart = 14.dp,
+                        topEnd = 22.dp
+                    ),
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(
-                        text = badgeText,
+                        badgeText,
                         color = Color.White,
                         fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -672,70 +799,48 @@ fun TimeSlotCard(
 
             Column(
                 modifier = Modifier
-                    .padding(12.dp)
+                    .padding(14.dp)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // --- Time Section ---
+
+                // -------- Time --------
                 Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AccessTime,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = if (isBooked) Color(0xFFE57373) else if (isSelected) BrandGreen else Color.Gray
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = slot.start.toDisplayTime(),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = contentColor
-                        )
-                    }
+                    Text(
+                        text = slot.start.toDisplayTime(),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = textColor
+                    )
+
                     Text(
                         text = "to ${slot.end.toDisplayTime()}",
-                        fontSize = 11.sp,
-                        color = if (isBooked) Color(0xFFE57373).copy(alpha = 0.7f) else Color.Gray,
-                        modifier = Modifier.padding(start = 18.dp)
+                        fontSize = 12.sp,
+                        color = Color.Gray
                     )
                 }
 
-                // --- Price Section ---
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    if (isBooked) {
-                        Text(
-                            text = "Reserved",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE57373)
-                        )
-                    } else {
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Rs",
-                                fontSize = 10.sp,
-                                color = if (isSelected) BrandGreen else Color.Gray,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = slot.price,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                color = contentColor,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
+                // -------- Price / Status --------
+                if (isBooked) {
+                    Text(
+                        text = "Reserved",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFD32F2F)
+                    )
+                } else {
+                    Text(
+                        text = "Rs ${slot.price}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = textColor
+                    )
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun TimeSlotGrid(
@@ -964,3 +1069,4 @@ fun PaymentOptionCard(
 fun ArenaBookingScreenPreview() {
     ArenaBookingScreen(onBackClick = {})
 }
+

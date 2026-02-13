@@ -96,6 +96,18 @@ object Common {
             .format(DateTimeFormatter.ofPattern("hh:mm a"))
     }
 
+    fun String.toHourInt(): Int {
+        return try {
+            // Parses the ISO-8601 string (e.g., 2026-02-12T21:00:00Z)
+            val instant = Instant.parse(this)
+            // Convert to local time zone (e.g., Asia/Kathmandu or system default)
+            val dateTime = instant.atZone(ZoneId.systemDefault())
+            dateTime.hour // Returns 0-23
+        } catch (e: Exception) {
+            0 // Fallback
+        }
+    }
+
     fun String.toDisplayDate(): String {
         val date = try {
             Instant.parse(this)

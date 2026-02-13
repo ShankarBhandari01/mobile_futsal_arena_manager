@@ -145,6 +145,9 @@ class BookingViewModel @Inject constructor(
                 _state.update { it.copy(selectedDate = intent.date) }
             }
 
+            is BookingIntent.SetupRecurring -> {
+
+            }
         }
     }
 }

@@ -11,4 +11,5 @@ sealed interface BookingIntent {
     data class SelectSlot(val slot: Slot) : BookingIntent
     data class SelectCourt(val court: Courts) : BookingIntent
     data class SelectDate(val date: LocalDate) : BookingIntent
+    data class SetupRecurring(val court: Courts, val frequency: String): BookingIntent
 }
