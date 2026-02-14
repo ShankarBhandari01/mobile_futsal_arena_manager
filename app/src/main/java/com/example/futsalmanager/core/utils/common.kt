@@ -21,6 +21,7 @@ import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetState
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -118,6 +119,19 @@ object Common {
         }
 
         return date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
+    }
+
+    fun generateTimeSlots(hoursToAdd: Long = 1): List<LocalTime> {
+        val startTime = LocalTime.of(6, 0) // 06:00
+        val endTime = LocalTime.of(22, 0)  // 22:00 (10 PM)
+        val slots = mutableListOf<LocalTime>()
+
+        var current = startTime
+        while (!current.isAfter(endTime)) {
+            slots.add(current)
+            current = current.plusHours(hoursToAdd)
+        }
+        return slots
     }
 
 }

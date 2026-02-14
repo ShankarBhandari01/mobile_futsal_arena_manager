@@ -518,11 +518,13 @@ fun BookingSelectionCard(
                         else Color.LightGray.copy(alpha = 0.5f)
                     ),
                     modifier = Modifier.fillMaxWidth()
-                ) {
+                )
+                {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    )
+                    {
                         // Small icon representing court type
                         Surface(
                             shape = CircleShape,
