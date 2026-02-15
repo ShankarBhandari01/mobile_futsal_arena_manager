@@ -108,8 +108,6 @@ import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.login.AuthMode
 import com.example.futsalmanager.ui.theme.BrandGreen
-import com.example.futsalmanager.ui.theme.LightGreenBG
-import com.example.futsalmanager.ui.theme.WarningYellowBG
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -319,8 +317,8 @@ fun <T> GenericSegmentedToggle(
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFEFEFF2))
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.primaryContainer)
     )
     {
         val toggleWidth = maxWidth / 2
@@ -337,8 +335,8 @@ fun <T> GenericSegmentedToggle(
                 .width(toggleWidth)
                 .fillMaxHeight()
                 .padding(4.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.White)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.onPrimaryContainer)
         )
 
         Row(Modifier.fillMaxSize()) {
@@ -364,15 +362,18 @@ fun <T> GenericSegmentedToggle(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = if (isSelected) BrandGreen else Color.Gray,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(
                             text = labelProvider(option),
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color.Black else Color.Gray,
+                            fontWeight = if (isSelected) FontWeight.Bold
+                            else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp
                         )
                     }
@@ -555,8 +556,8 @@ fun ArenaCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable { onItemClick(arena) },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
     ) {
@@ -588,7 +589,7 @@ fun ArenaCard(
                         text = arena.name ?: "Unknown Arena",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -596,7 +597,7 @@ fun ArenaCard(
                     Text(
                         text = "ID: ${arena.id ?: "N/A"}",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -608,7 +609,7 @@ fun ArenaCard(
                 Icon(
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = null,
-                    tint = BrandGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -617,7 +618,7 @@ fun ArenaCard(
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = Color.DarkGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -633,12 +634,12 @@ fun ArenaCard(
                     text = "View Details",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = BrandGreen
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = BrandGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -791,7 +792,7 @@ fun LocationSuccessBanner(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        color = LightGreenBG,
+        color = MaterialTheme.colorScheme.primaryContainer,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(
             1.dp,
@@ -830,7 +831,7 @@ fun LocationWarningBanner(
     onIntent: (HomeIntent) -> Unit
 ) {
     Surface(
-        color = WarningYellowBG,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(
             1.dp,
@@ -856,7 +857,7 @@ fun LocationWarningBanner(
             )
             Text(
                 text = "Enable",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 modifier = Modifier
@@ -913,13 +914,13 @@ fun EmptyStateComponent(
         // Subtle Icon
         Surface(
             shape = CircleShape,
-            color = Color(0xFFF5F5F5),
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier.size(120.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.SearchOff, // Or a custom soccer ball icon
                 contentDescription = null,
-                tint = Color.LightGray,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(30.dp)
             )
         }
@@ -930,7 +931,7 @@ fun EmptyStateComponent(
             text = "No Arenas Found",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -938,7 +939,7 @@ fun EmptyStateComponent(
         Text(
             text = "We couldn't find any futsal courts matching your current filters. Try changing the date or city.",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 40.dp)
         )
@@ -949,9 +950,12 @@ fun EmptyStateComponent(
         OutlinedButton(
             onClick = onResetFilters,
             shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, BrandGreen)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         ) {
-            Text("Clear Search", color = BrandGreen)
+            Text("Clear Search", color = MaterialTheme.colorScheme.primary)
         }
     }
 }

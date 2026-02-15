@@ -1,6 +1,9 @@
+package com.example.futsalmanager.ui.home
+
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
@@ -93,15 +97,8 @@ import com.example.futsalmanager.ui.component.HomePermissionWrapper
 import com.example.futsalmanager.ui.component.LocationSuccessBanner
 import com.example.futsalmanager.ui.component.LocationWarningBanner
 import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
-import com.example.futsalmanager.ui.home.HomeEffect
-import com.example.futsalmanager.ui.home.HomeIntent
-import com.example.futsalmanager.ui.home.HomeState
-import com.example.futsalmanager.ui.home.ViewMode
 import com.example.futsalmanager.ui.home.navigation_drawer.FutsalDrawerSheet
 import com.example.futsalmanager.ui.home.viewModels.HomeViewModel
-import com.example.futsalmanager.ui.theme.BrandGreen
-import com.example.futsalmanager.ui.theme.LightGreenBG
-import com.example.futsalmanager.ui.theme.OrangeText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -236,11 +233,15 @@ fun FutsalHomeScreen(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color = BrandGreen,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text("F", color = Color.White, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "F",
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -290,7 +291,7 @@ fun FutsalHomeScreen(
                         isRefreshing = state.isLoading,
                         modifier = Modifier.align(Alignment.TopCenter),
                         containerColor = Color.White,
-                        color = BrandGreen
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             ) {
@@ -309,13 +310,13 @@ fun FutsalHomeScreen(
                             // Trophy Icon Header
                             Surface(
                                 shape = CircleShape,
-                                color = LightGreenBG,
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(100.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.EmojiEvents, // Use a trophy icon
                                     contentDescription = null,
-                                    tint = BrandGreen,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(24.dp)
                                 )
                             }
@@ -384,7 +385,7 @@ fun FutsalHomeScreen(
                     }
 
                     item {
-                        androidx.compose.animation.AnimatedContent(
+                        AnimatedContent(
                             targetState = state.isLocationEnabled,
                             transitionSpec = {
                                 (fadeIn() + expandVertically()) togetherWith (fadeOut() + shrinkVertically())
@@ -418,18 +419,21 @@ fun FutsalHomeScreen(
                                 Modifier.weight(1f),
                                 "34",
                                 "Arenas",
-                                BrandGreen,
-                                LightGreenBG
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primaryContainer
                             )
                             StatCard(
-                                Modifier.weight(1f), "24/7", "Booking", BrandGreen, LightGreenBG
+                                Modifier.weight(1f), "24/7",
+                                "Booking",
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primaryContainer
                             )
                             StatCard(
                                 Modifier.weight(1f),
                                 "Instant",
                                 "Confirm",
-                                OrangeText,
-                                Color(0xFFFFF7E6)
+                                MaterialTheme.colorScheme.onTertiaryContainer,
+                                MaterialTheme.colorScheme.tertiaryContainer
                             )
                         }
                     }

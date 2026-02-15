@@ -47,7 +47,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.OtpInputField
 import com.example.futsalmanager.ui.login.viewmodels.OtpPasswordResetViewModel
-import com.example.futsalmanager.ui.theme.green
 
 @Composable
 fun PasswordResetScreen(
@@ -238,7 +237,7 @@ fun PasswordResetScreen(
             loading = state.loading,
             text = "Reset Password",
             modifier = Modifier.fillMaxWidth(),
-            containerColor = green
+            containerColor = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.height(16.dp))
     }

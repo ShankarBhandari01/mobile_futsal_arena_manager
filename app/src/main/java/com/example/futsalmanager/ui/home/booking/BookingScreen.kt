@@ -2,28 +2,19 @@ package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,39 +29,30 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -106,11 +88,9 @@ import com.example.futsalmanager.domain.model.SlotStatus
 import com.example.futsalmanager.domain.model.TimeSegment
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
-import com.example.futsalmanager.ui.theme.LightGreenBG
 import java.time.LocalDate
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BookingScreenRoute(
     snackbarHostState: SnackbarHostState,
@@ -127,7 +107,6 @@ fun BookingScreenRoute(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArenaBookingScreen(
@@ -161,6 +140,7 @@ fun ArenaBookingScreen(
             }
     }
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
                 title = { Text("Arena Details", fontSize = 18.sp) },
@@ -172,7 +152,9 @@ fun ArenaBookingScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                )
             )
         }
     ) { padding ->
@@ -180,7 +162,7 @@ fun ArenaBookingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF8F9FA)),
+                .background(MaterialTheme.colorScheme.surface),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         )
@@ -206,7 +188,7 @@ fun ArenaBookingScreen(
                         Text(
                             "Select your preferred court, date, and time slot at Sitapaila Sports Arena.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -272,23 +254,23 @@ fun ArenaHeaderCard(state: BookingState) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     modifier = Modifier.size(70.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = LightGreenBG
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     AsyncImage(
                         model = arena?.logoUrl ?: R.drawable.reshot,
                         contentDescription = null,
                         modifier = Modifier
                             .size(64.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(MaterialTheme.shapes.medium),
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(R.drawable.reshot),
                         error = painterResource(R.drawable.reshot)
@@ -310,14 +292,14 @@ fun ArenaHeaderCard(state: BookingState) {
                         Icon(
                             imageVector = Icons.Default.Place,
                             contentDescription = null,
-                            tint = BrandGreen,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = arena?.city ?: "Location unknown",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -327,10 +309,10 @@ fun ArenaHeaderCard(state: BookingState) {
             HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
             Spacer(Modifier.height(12.dp))
 
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                itemVerticalAlignment = Alignment.CenterVertically
             ) {
                 InfoBadge(
                     icon = Icons.Default.SportsSoccer,
@@ -351,16 +333,25 @@ fun ArenaHeaderCard(state: BookingState) {
 @Composable
 fun InfoBadge(icon: ImageVector, label: String) {
     Surface(
-        color = LightGreenBG,
+        color = MaterialTheme.colorScheme.primaryContainer,
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, null, modifier = Modifier.size(14.dp), tint = BrandGreen)
+            Icon(
+                icon,
+                null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(Modifier.width(4.dp))
-            Text(label, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = BrandGreen)
+            Text(
+                label, fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -376,12 +367,13 @@ fun RecurringBookingBanner(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        color = BrandGreen.copy(alpha = 0.05f),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(
             width = 1.dp,
-            color = BrandGreen.copy(0.2f)
+            color = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
+        val drawRound = MaterialTheme.colorScheme.primaryContainer
         Row(
             modifier = Modifier
                 .padding(16.dp)
@@ -391,7 +383,7 @@ fun RecurringBookingBanner(
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                     )
                     drawRoundRect(
-                        color = BrandGreen.copy(alpha = 0.3f),
+                        color = drawRound,
                         style = stroke,
                         cornerRadius = CornerRadius(16.dp.toPx())
                     )
@@ -407,13 +399,13 @@ fun RecurringBookingBanner(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(BrandGreen.copy(alpha = 0.1f)),
+                        .background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.EventRepeat,
                         contentDescription = null,
-                        tint = BrandGreen,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -425,12 +417,12 @@ fun RecurringBookingBanner(
                         text = "Recurring Booking",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = BrandGreen
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
                         text = "Reserve your spot weekly.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -438,7 +430,7 @@ fun RecurringBookingBanner(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = BrandGreen.copy(alpha = 0.5f),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -473,14 +465,18 @@ fun BookingSelectionCard(
             Text(
                 text = "Step 1 of 3",
                 style = MaterialTheme.typography.bodySmall,
-                color = BrandGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
         }
 
         // --- Date Selection (Horizontal Strip) ---
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Available Dates", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Text(
+                "Available Dates",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(horizontal = 2.dp)
@@ -499,8 +495,14 @@ fun BookingSelectionCard(
         }
 
         // --- Court Selection (Visual Grid/List) ---
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Select Courts", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                "Select Courts",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             state.courts.forEach { court ->
                 val isSelected = state.selectedCourt == court
@@ -510,12 +512,13 @@ fun BookingSelectionCard(
                         onCourtSelected(court!!)
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) LightGreenBG else Color.White,
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant,
 
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandGreen
-                        else Color.LightGray.copy(alpha = 0.5f)
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -528,13 +531,16 @@ fun BookingSelectionCard(
                         // Small icon representing court type
                         Surface(
                             shape = CircleShape,
-                            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.SportsSoccer,
                                 contentDescription = null,
-                                tint = if (isSelected) Color.White else Color.Gray,
+                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onPrimaryContainer,
+
                                 modifier = Modifier.padding(10.dp)
                             )
                         }
@@ -542,14 +548,23 @@ fun BookingSelectionCard(
                         Spacer(Modifier.width(16.dp))
 
                         Column(Modifier.weight(1f)) {
-                            Text(court!!.name, fontWeight = FontWeight.Bold)
-                            Text("${court.type} Floor", fontSize = 12.sp, color = Color.Gray)
+                            Text(
+                                court!!.name,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "${court.type} Floor", fontSize = 12.sp,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-
                         Text(
                             text = "Rs ${court!!.basePrice}/hr",
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (isSelected) BrandGreen else Color.Black
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -568,16 +583,18 @@ fun DateItem(
     val dayName = date.dayOfWeek.name.take(3) // MON, TUE
     val dayNumber = date.dayOfMonth.toString()
 
-    val contentColor = if (isSelected) BrandGreen else Color.Black
-    val subTextColor = if (isSelected) BrandGreen.copy(alpha = 0.7f) else Color.Gray
+    val contentColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val subTextColor =
+        if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) BrandGreen.copy(alpha = 0.12f) else Color.White,
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.4f)
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         ),
         // Tonal elevation adds a slight shadow/depth
         tonalElevation = if (isSelected) 4.dp else 0.dp,
@@ -608,7 +625,7 @@ fun DateItem(
                     Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(BrandGreen)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             } else {
                 Spacer(Modifier.size(6.dp))

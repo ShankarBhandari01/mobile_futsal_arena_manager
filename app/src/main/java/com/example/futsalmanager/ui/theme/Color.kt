@@ -1,46 +1,85 @@
 package com.example.futsalmanager.ui.theme
 
+
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
-
-val green = Color(0xFF22C55E)
-val lightGreen = Color(0xFFE8F5E9)
-val white = Color(0xFFFFFFFF)
-val black = Color(0xFF000000)
-
-
-//  the brand colors
-val LightGreenBG = Color(0xFFF1F8F1)
+/**
+ * 1. RAW COLOR TOKENS
+ * Named based on their visual value
+ */
 val BrandGreen = Color(0xFF4CAF50)
-val WarningYellowBG = Color(0xFFFFFBE6)
-val OrangeText = Color(0xFFD48806)
+val BrandGreenLight = Color(0xFFC8E6C9)
+val BrandGreenDark = Color(0xFF2E7D32)
 
+val WarningOrange = Color(0xFFD48806)
+val WarningOrangeLight = Color(0xFFFFFBE6)
 
-// Light Palette
+val ErrorRed = Color(0xFFBA1A1A)
+val ErrorRedDark = Color(0xFF410002)
+
+val White = Color(0xFFFFFFFF)
+val Black = Color(0xFF191C19) // M3 Neutral 10
+val GreyVariant = Color(0xFF424940)
+
+/**
+ * 2. LIGHT COLOR SCHEME
+ * Standard M3 Mapping
+ */
 val LightColorScheme = lightColorScheme(
-    primary = BrandGreen, //  Brand Green
-    onPrimary = Color.White,
-    surface = Color(0xFFFFFFFF), // White background for cards/screens
-    onSurface = Color(0xFF1C1B1F), // Dark text for light mode
-    secondaryContainer = Color(0xFFF1F8F1), // The LightGreenBG for selected items
-    surfaceVariant = Color(0xFFF5F5F5) // For the toggle background
+    primary = BrandGreen,
+    onPrimary = White,
+    primaryContainer = BrandGreenLight,
+    onPrimaryContainer = Color(0xFF002104),
+
+    secondary = Color(0xFF52634F), // M3 Sage Green
+    onSecondary = White,
+    secondaryContainer = Color(0xFFD5E8CF),
+    onSecondaryContainer = Color(0xFF101F10),
+
+    tertiary = WarningOrange,
+    onTertiary = White,
+    tertiaryContainer = WarningOrangeLight,
+    onTertiaryContainer = Color(0xFF281900),
+
+    error = ErrorRed,
+    onError = White,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = ErrorRedDark,
+
+    background = Color(0xFFFBFDF8),
+    onBackground = Black,
+    surface = White,
+    onSurface = Black,
+    surfaceVariant = Color(0xFFDEE5D8), // Unselected chips/toggles
+    onSurfaceVariant = GreyVariant
 )
 
-// Dark Palette
+/**
+ * 3. DARK COLOR SCHEME
+ * Uses desaturated tones for readability and eye comfort
+ */
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF81C784), // A slightly lighter green for dark mode readability
+    primary = Color(0xFF81C784), // Lighter green for dark contrast
     onPrimary = Color(0xFF00390A),
-    surface = Color(0xFF121212), // Deep dark background
-    onSurface = Color(0xFFE6E1E5), // Light text for dark mode
-    secondaryContainer = Color(0xFF233223), // Subdued green for selection in dark mode
-    surfaceVariant = Color(0xFF49454F)
+    primaryContainer = Color(0xFF1B5E20),
+    onPrimaryContainer = BrandGreenLight,
+
+    secondary = Color(0xFFB9CCB4),
+    onSecondary = Color(0xFF253423),
+    secondaryContainer = Color(0xFF3B4B38),
+    onSecondaryContainer = Color(0xFFD5E8CF),
+
+    tertiary = Color(0xFFFFB951), // Desaturated Warning Orange
+    onTertiary = Color(0xFF452B00),
+    tertiaryContainer = Color(0xFF633F00),
+    onTertiaryContainer = Color(0xFFFFDDB3),
+
+    background = Black,
+    onBackground = Color(0xFFE2E3DD),
+    surface = Black,
+    onSurface = Color(0xFFE2E3DD),
+    surfaceVariant = GreyVariant,
+    onSurfaceVariant = Color(0xFFC2C9BD)
 )

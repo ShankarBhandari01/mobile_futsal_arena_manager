@@ -1,6 +1,6 @@
 package com.example.futsalmanager.ui
 
-import FutsalHomeScreenRoute
+import com.example.futsalmanager.ui.home.FutsalHomeScreenRoute
 import android.os.Build
 import android.os.Bundle
 import android.util.Log

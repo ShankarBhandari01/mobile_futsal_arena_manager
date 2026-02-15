@@ -76,7 +76,6 @@ import androidx.compose.ui.unit.sp
 import com.example.futsalmanager.core.utils.Common
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.ui.theme.BrandGreen
-import com.example.futsalmanager.ui.theme.LightGreenBG
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -99,9 +98,11 @@ fun RecurringBookingSheetContent(
     ModalBottomSheet(
         onDismissRequest = {},
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = Color.White,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.LightGray.copy(alpha = 0.5f)) }
+        shape = MaterialTheme.shapes.large,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.surfaceVariant)
+        }
     ) {
         Column(
             modifier = Modifier
@@ -219,13 +220,13 @@ fun StepThreeReview(
             onClick = {
 
             },
-            shape = RoundedCornerShape(12.dp),
-            color = if (isSelected) LightGreenBG else Color.White,
+            shape = MaterialTheme.shapes.medium,
+            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
 
             border = BorderStroke(
                 width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) BrandGreen
-                else Color.LightGray.copy(alpha = 0.5f)
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -236,13 +237,13 @@ fun StepThreeReview(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Weekend,
                         contentDescription = null,
-                        tint = if (isSelected) Color.White else Color.Gray,
+                        tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -260,12 +261,12 @@ fun StepThreeReview(
 
             },
             shape = RoundedCornerShape(12.dp),
-            color = if (isSelected) LightGreenBG else Color.White,
+            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
 
             border = BorderStroke(
                 width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) BrandGreen
-                else Color.LightGray.copy(alpha = 0.5f)
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -276,13 +277,13 @@ fun StepThreeReview(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Weekend,
                         contentDescription = null,
-                        tint = if (isSelected) Color.White else Color.Gray,
+                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -321,12 +322,12 @@ fun StepThreeReview(
 
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) LightGreenBG else Color.White,
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
 
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandGreen
-                        else Color.LightGray.copy(alpha = 0.5f)
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -337,13 +338,13 @@ fun StepThreeReview(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Payment,
                                 contentDescription = null,
-                                tint = if (isSelected) Color.White else Color.Gray,
+                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.padding(10.dp)
                             )
                         }
@@ -366,12 +367,12 @@ fun StepThreeReview(
 
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) LightGreenBG else Color.White,
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
 
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandGreen
-                        else Color.LightGray.copy(alpha = 0.5f)
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -382,13 +383,13 @@ fun StepThreeReview(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = if (isSelected) Color.White else Color.Gray,
+                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.padding(10.dp)
                             )
                         }
@@ -411,12 +412,12 @@ fun StepThreeReview(
 
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) LightGreenBG else Color.White,
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
 
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandGreen
-                        else Color.LightGray.copy(alpha = 0.5f)
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -427,13 +428,13 @@ fun StepThreeReview(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.3f),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.EventRepeat,
                                 contentDescription = null,
-                                tint = if (isSelected) Color.White else Color.Gray,
+                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.padding(10.dp)
                             )
                         }
@@ -661,8 +662,8 @@ fun StepTwoSchedule(
                     },
                     label = { Text(day.getDisplayName(TextStyle.SHORT, Locale.getDefault())) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandGreen,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 )
             }
@@ -680,7 +681,7 @@ fun StepTwoSchedule(
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(
                     1.dp,
-                    if (selectedTime != null) BrandGreen else Color.LightGray
+                    if (selectedTime != null) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -691,13 +692,13 @@ fun StepTwoSchedule(
                 ) {
                     Text(
                         text = selectedTime?.format(timeFormatter) ?: "Select Time ",
-                        color = if (selectedTime == null) Color.Gray else Color.Black,
+                        color = if (selectedTime == null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (selectedTime != null) FontWeight.Bold else FontWeight.Normal
                     )
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = if (selectedTime != null) BrandGreen else Color.Gray
+                        tint = if (selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -707,7 +708,7 @@ fun StepTwoSchedule(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 Common.generateTimeSlots(1).forEach { time ->
                     DropdownMenuItem(
@@ -748,8 +749,8 @@ fun StepCircle(
             .clip(CircleShape)
             .background(
                 when {
-                    isDone || isActive -> BrandGreen
-                    else -> Color(0xFFF1F3F4)
+                    isDone || isActive -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.surface
                 }
             ),
         contentAlignment = Alignment.Center
@@ -758,13 +759,13 @@ fun StepCircle(
             Icon(
                 imageVector = Icons.Default.CheckCircleOutline,
                 contentDescription = "Done",
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.size(18.dp)
             )
         } else {
             Text(
                 text = number,
-                color = if (isActive) Color.White else Color.Gray,
+                color = if (isActive) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
@@ -777,9 +778,9 @@ fun StepCircle(
 @PreviewScreenSizes
 @Composable
 fun RecurringBookingSheetContentPreview() {
-    //StepTwoSchedule(onNext = {}, onBack = {})
+    StepTwoSchedule(onNext = {}, onBack = {})
     // RecurringBookingSheetContent(courts = emptyList(), onConfirm = { _, _ -> })
-    StepThreeReview(onConfirm = {}, onBack = {})
+    //StepThreeReview(onConfirm = {}, onBack = {})
 }
 
 @Composable
@@ -790,7 +791,7 @@ fun StepNavigationButtons(
     nextButtonEnabled: Boolean = true,
     backButtonText: String = "Back",
     nextButtonText: String = "Next",
-    nextButtonColor: Color = BrandGreen
+    nextButtonColor: Color = MaterialTheme.colorScheme.primary
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -801,12 +802,12 @@ fun StepNavigationButtons(
         OutlinedButton(
             onClick = onBack,
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, Color.LightGray)
+            shape = MaterialTheme.shapes.extraLarge,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Text(
                 text = backButtonText,
-                color = Color.DarkGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -816,16 +817,16 @@ fun StepNavigationButtons(
             onClick = onNext,
             enabled = nextButtonEnabled,
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.extraLarge,
             colors = ButtonDefaults.buttonColors(
                 containerColor = nextButtonColor,
-                disabledContainerColor = Color.LightGray.copy(alpha = 0.4f)
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
             Text(
                 text = nextButtonText,
                 fontWeight = FontWeight.Bold,
-                color = if (nextButtonEnabled) Color.White else Color.Gray
+                color = if (nextButtonEnabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

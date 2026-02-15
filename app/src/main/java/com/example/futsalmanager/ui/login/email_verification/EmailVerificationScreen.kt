@@ -48,7 +48,7 @@ import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.OtpInputField
 import com.example.futsalmanager.ui.login.viewmodels.EmailVerificationViewModel
 import com.example.futsalmanager.ui.theme.FutsalManagerTheme
-import com.example.futsalmanager.ui.theme.green
+
 
 @Composable
 fun EmailVerificationScreen(
@@ -178,7 +178,7 @@ fun EmailVerificationScreen(
             onClick = {
                 onIntent(EmailVerificationIntent.SubmitClicked)
             },
-            containerColor = green,
+            containerColor = MaterialTheme.colorScheme.primary,
             contentColor = Color.White,
             icon = {
                 Icon(

@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.theme.BrandGreen
-import com.example.futsalmanager.ui.theme.LightGreenBG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -59,7 +58,7 @@ fun FutsalDrawerSheet(
 ) {
     ModalDrawerSheet(
         modifier = Modifier.fillMaxHeight(),
-        drawerContainerColor = Color.White,
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
         drawerShape = RoundedCornerShape(0.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -74,7 +73,7 @@ fun FutsalDrawerSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = BrandGreen,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -133,11 +132,11 @@ fun FutsalDrawerSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFFD32F2F),
+                        color = MaterialTheme.colorScheme.errorContainer,
                         modifier = Modifier.size(48.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text("JP", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("JP", color = MaterialTheme.colorScheme.onErrorContainer, fontWeight = FontWeight.Bold)
                         }
                     }
                     Spacer(modifier = Modifier.width(12.dp))
@@ -191,7 +190,7 @@ fun DrawerMenuItem(
             Text(
                 text = label,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) BrandGreen else Color.Gray
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
             )
         },
         selected = isSelected,
@@ -200,11 +199,11 @@ fun DrawerMenuItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) BrandGreen else Color.Gray
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
             )
         },
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = LightGreenBG,
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             unselectedContainerColor = Color.Transparent
         ),
         modifier = Modifier

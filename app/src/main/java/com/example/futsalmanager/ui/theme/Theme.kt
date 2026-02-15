@@ -20,11 +20,13 @@ fun FutsalManagerTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
     MaterialTheme(
+        shapes= Shapes,
         colorScheme = colorScheme,
         typography = Typography,
         content = content
