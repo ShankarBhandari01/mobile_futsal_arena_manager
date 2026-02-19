@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,9 +56,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -85,8 +86,10 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecurringBookingSheetContent(
+    sheetState: SheetState,
     courts: List<Courts?>,
-    onConfirm: (Courts, String) -> Unit
+    onConfirm: (Courts, String) -> Unit,
+    onDismiss: () -> Unit
 ) {
     // Current step state
     var currentStep by remember { mutableIntStateOf(1) }
@@ -95,16 +98,19 @@ fun RecurringBookingSheetContent(
     var selectedCourt by remember { mutableStateOf<Courts?>(null) }
     var selectedFreq by remember { mutableStateOf("Weekly") }
 
+
     ModalBottomSheet(
-        onDismissRequest = {},
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        onDismissRequest = {
+            onDismiss()
+        },
+        sheetState = sheetState,
         shape = MaterialTheme.shapes.large,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.background,
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.surfaceVariant)
         }
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding() // Ensures content is above system nav buttons
@@ -112,96 +118,102 @@ fun RecurringBookingSheetContent(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         )
         {
-            // ---  Header with Icon ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.EventRepeat,
-                        contentDescription = null,
-                        tint = BrandGreen,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Set Up Recurring Booking",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            Text(
-                "Reserve the same time slot automatically on a regular schedule.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-
-            // ---. Static Stepper (Always Visible) ---
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StepCircle(number = "1", isActive = currentStep == 1, isDone = currentStep > 1)
-                HorizontalDivider(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .padding(horizontal = 8.dp),
-                    color = if (currentStep > 1) BrandGreen else Color.LightGray
+            item {
+                // ---  Header with Icon ---
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 )
-                StepCircle(number = "2", isActive = currentStep == 2, isDone = currentStep > 2)
-                HorizontalDivider(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .padding(horizontal = 8.dp),
-                    color = if (currentStep > 2) BrandGreen else Color.LightGray
-                )
-                StepCircle(number = "3", isActive = currentStep == 3, isDone = currentStep > 3)
-            }
-
-            // --- . Animated Content Transition ---
-            AnimatedContent(
-                targetState = currentStep,
-                transitionSpec = {
-                    // If we are going to a higher step, slide in from right
-                    if (targetState > initialState) {
-                        (slideInHorizontally { it } + fadeIn()).togetherWith(
-                            slideOutHorizontally { -it } + fadeOut())
-                    } else {
-                        // If we are going back, slide in from left
-                        (slideInHorizontally { -it } + fadeIn()).togetherWith(
-                            slideOutHorizontally { it } + fadeOut())
-                    }.using(SizeTransform(clip = false))
-                },
-                label = "StepTransition"
-            ) { step ->
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    when (step) {
-                        1 -> StepOneCourtSelection(
-                            courts = courts,
-                            onCourtSelected = {
-                                selectedCourt = it;
-                                currentStep = 2
-                            }
+                {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.EventRepeat,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
-
-                        2 -> StepTwoSchedule(
-                            onNext = { currentStep = 3 },
-                            onBack = { currentStep = 1 }
-                        )
-
-                        3 -> StepThreeReview(
-                            onConfirm = { onConfirm(selectedCourt!!, selectedFreq) },
-                            onBack = { currentStep = 2 }
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Set Up Recurring Booking",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
+                Text(
+                    "Reserve the same time slot automatically on a regular schedule.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+
+                // ---. Static Stepper (Always Visible) ---
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                )
+                {
+                    StepCircle(number = "1", isActive = currentStep == 1, isDone = currentStep > 1)
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .padding(horizontal = 8.dp),
+                        color = if (currentStep > 1) BrandGreen else Color.LightGray
+                    )
+                    StepCircle(number = "2", isActive = currentStep == 2, isDone = currentStep > 2)
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .padding(horizontal = 8.dp),
+                        color = if (currentStep > 2) BrandGreen else Color.LightGray
+                    )
+                    StepCircle(number = "3", isActive = currentStep == 3, isDone = currentStep > 3)
+                }
+
+                // --- . Animated Content Transition ---
+                AnimatedContent(
+                    targetState = currentStep,
+                    transitionSpec = {
+                        // If we are going to a higher step, slide in from right
+                        if (targetState > initialState) {
+                            (slideInHorizontally { it } + fadeIn()).togetherWith(
+                                slideOutHorizontally { -it } + fadeOut())
+                        } else {
+                            // If we are going back, slide in from left
+                            (slideInHorizontally { -it } + fadeIn()).togetherWith(
+                                slideOutHorizontally { it } + fadeOut())
+                        }.using(SizeTransform(clip = false))
+                    },
+                    label = "StepTransition"
+                )
+                { step ->
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        when (step) {
+                            1 -> StepOneCourtSelection(
+                                courts = courts,
+                                onCourtSelected = {
+                                    selectedCourt = it;
+                                    currentStep = 2
+                                }
+                            )
+
+                            2 -> StepTwoSchedule(
+                                onNext = { currentStep = 3 },
+                                onBack = { currentStep = 1 }
+                            )
+
+                            3 -> StepThreeReview(
+                                onConfirm = { onConfirm(selectedCourt!!, selectedFreq) },
+                                onBack = { currentStep = 2 }
+                            )
+                        }
+                    }
+                }
             }
+
         }
     }
 

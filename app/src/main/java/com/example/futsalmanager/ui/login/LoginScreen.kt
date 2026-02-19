@@ -74,7 +74,7 @@ fun LoginScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.background
     ) {
         Box(contentAlignment = Alignment.Center) {
             Card(

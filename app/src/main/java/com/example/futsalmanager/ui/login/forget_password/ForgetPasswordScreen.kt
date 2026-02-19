@@ -66,7 +66,7 @@ fun ForgetPasswordScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.background
     ) {
         Box(
             contentAlignment = Alignment.Center,

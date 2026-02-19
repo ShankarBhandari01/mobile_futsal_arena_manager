@@ -52,6 +52,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.material)
     // backward compatibility library like instant, LocalDate,LocalTime
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     //room

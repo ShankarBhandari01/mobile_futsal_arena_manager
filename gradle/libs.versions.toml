@@ -26,12 +26,13 @@ ksp = "2.3.4"
 materialIconsExtended = "1.7.8"
 playServicesLocation = "21.3.0"
 runtime = "1.10.2"
-material3 = "1.4.0"
+material3 = "1.5.0-alpha14"
 foundationLayout = "1.10.2"
 foundation = "1.10.2"
 material3Lint = "1.4.0"
 uiText = "1.10.2"
-playServicesMaps = "20.0.0" #ksp
+playServicesMaps = "20.0.0"
+material = "1.13.0" #ksp
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -69,6 +70,7 @@ androidx-compose-material3-lint = { group = "androidx.compose.material3", name =
 androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 
 [plugins]

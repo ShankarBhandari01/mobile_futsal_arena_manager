@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,191 +57,197 @@ fun PasswordResetScreen(
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
-            .imePadding(),
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { onIntent(OtpPasswordResetIntent.OnBackClicked) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .imePadding(),
+            verticalArrangement = Arrangement.Center
+        )
+        {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { onIntent(OtpPasswordResetIntent.OnBackClicked) }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+                Text("Back", color = Color.Gray)
             }
-            Text("Back", color = Color.Gray)
+            Spacer(modifier = Modifier.height(48.dp))
+            Text(
+                text = "Reset Password",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+            )
+            Text(
+                text = "Enter the code sent to your email",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .align(Alignment.CenterHorizontally),
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = buildAnnotatedString {
+                    append(
+                        "Code sent to "
+                    )
+                    withStyle(
+                        style =
+                            SpanStyle(fontWeight = FontWeight.Bold)
+                    ) {
+                        append(state.email)
+                    }
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "VERIFICATION CODE",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OtpInputField(
+                otpLength = 6,
+                value = state.otp,
+                onValueChange = {
+                    onIntent(OtpPasswordResetIntent.OnOtpChanged(it))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "NEW PASSWORD",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                placeholder = {
+                    Text("At least 8 characters")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Password,
+                        contentDescription = "Password Icon",
+                        tint = Color.Gray
+                    )
+                },
+                singleLine = true,
+                value = state.password,
+                onValueChange = {
+                    onIntent(OtpPasswordResetIntent.PasswordChanged(it))
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { keyboardController?.hide() }
+                ),
+                trailingIcon = {
+                    val image =
+                        if (passwordVisible) Icons.Default.Visibility
+                        else Icons.Default.VisibilityOff
+                    IconButton(
+                        onClick =
+                            { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = image,
+                            contentDescription = "Toggle Password"
+                        )
+                    }
+                })
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
+            Text(
+                text = "CONFIRM PASSWORD",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                placeholder = {
+                    Text("Confirm your password here.")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Password,
+                        contentDescription = "Password Icon",
+                        tint = Color.Gray
+                    )
+                },
+                singleLine = true,
+                value = state.confirmPassword,
+                onValueChange = {
+                    onIntent(OtpPasswordResetIntent.ConfirmPasswordChanged(it))
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { keyboardController?.hide() }),
+                trailingIcon = {
+                    val image =
+                        if (passwordVisible) Icons.Default.Visibility
+                        else Icons.Default.VisibilityOff
+                    IconButton(
+                        onClick =
+                            {
+                                passwordVisible = !passwordVisible
+                            }
+                    ) {
+                        Icon(
+                            imageVector = image,
+                            contentDescription = "Toggle Password"
+                        )
+                    }
+                })
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
+
+            LoadingButton(
+                onClick = { onIntent(OtpPasswordResetIntent.SubmitClicked) },
+                loading = state.loading,
+                text = "Reset Password",
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        Spacer(modifier = Modifier.height(48.dp))
-        Text(
-            text = "Reset Password",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-        )
-        Text(
-            text = "Enter the code sent to your email",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .align(Alignment.CenterHorizontally),
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = buildAnnotatedString {
-                append(
-                    "Code sent to "
-                )
-                withStyle(
-                    style =
-                        SpanStyle(fontWeight = FontWeight.Bold)
-                ) {
-                    append(state.email)
-                }
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "VERIFICATION CODE",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OtpInputField(
-            otpLength = 6,
-            value = state.otp,
-            onValueChange = {
-                onIntent(OtpPasswordResetIntent.OnOtpChanged(it))
-            }
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "NEW PASSWORD",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            placeholder = {
-                Text("At least 8 characters")
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Password,
-                    contentDescription = "Password Icon",
-                    tint = Color.Gray
-                )
-            },
-            singleLine = true,
-            value = state.password,
-            onValueChange = {
-                onIntent(OtpPasswordResetIntent.PasswordChanged(it))
-            },
-            visualTransformation = if (passwordVisible) VisualTransformation.None
-            else PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { keyboardController?.hide() }
-            ),
-            trailingIcon = {
-                val image =
-                    if (passwordVisible) Icons.Default.Visibility
-                    else Icons.Default.VisibilityOff
-                IconButton(
-                    onClick =
-                        { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = image,
-                        contentDescription = "Toggle Password"
-                    )
-                }
-            })
-        Spacer(
-            modifier = Modifier.height(32.dp)
-        )
-        Text(
-            text = "CONFIRM PASSWORD",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            placeholder = {
-                Text("Confirm your password here.")
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Password,
-                    contentDescription = "Password Icon",
-                    tint = Color.Gray
-                )
-            },
-            singleLine = true,
-            value = state.confirmPassword,
-            onValueChange = {
-                onIntent(OtpPasswordResetIntent.ConfirmPasswordChanged(it))
-            },
-            visualTransformation = if (passwordVisible) VisualTransformation.None
-            else PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { keyboardController?.hide() }),
-            trailingIcon = {
-                val image =
-                    if (passwordVisible) Icons.Default.Visibility
-                    else Icons.Default.VisibilityOff
-                IconButton(
-                    onClick =
-                        {
-                            passwordVisible = !passwordVisible
-                        }
-                ) {
-                    Icon(
-                        imageVector = image,
-                        contentDescription = "Toggle Password"
-                    )
-                }
-            })
-        Spacer(
-            modifier = Modifier.height(32.dp)
-        )
-
-        LoadingButton(
-            onClick = { onIntent(OtpPasswordResetIntent.SubmitClicked) },
-            loading = state.loading,
-            text = "Reset Password",
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
     }
+
 }
 
 @Composable

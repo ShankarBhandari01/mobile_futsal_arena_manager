@@ -46,7 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.futsalmanager.ui.home.HomeIntent
-import com.example.futsalmanager.ui.theme.BrandGreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -58,7 +57,7 @@ fun FutsalDrawerSheet(
 ) {
     ModalDrawerSheet(
         modifier = Modifier.fillMaxHeight(),
-        drawerContainerColor = MaterialTheme.colorScheme.surface,
+        drawerContainerColor = MaterialTheme.colorScheme.background,
         drawerShape = RoundedCornerShape(0.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -93,7 +92,11 @@ fun FutsalDrawerSheet(
                     )
                 }
                 IconButton(onClick = { scope.launch { drawerState.close() } }) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
+                    Icon(
+                        Icons.Default.Close,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        contentDescription = "Close"
+                    )
                 }
             }
 
@@ -136,7 +139,11 @@ fun FutsalDrawerSheet(
                         modifier = Modifier.size(48.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text("JP", color = MaterialTheme.colorScheme.onErrorContainer, fontWeight = FontWeight.Bold)
+                            Text(
+                                "JP",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.width(12.dp))

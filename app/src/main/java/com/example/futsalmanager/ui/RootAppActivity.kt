@@ -1,6 +1,5 @@
 package com.example.futsalmanager.ui
 
-import com.example.futsalmanager.ui.home.FutsalHomeScreenRoute
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.futsalmanager.ui.home.FutsalHomeScreenRoute
 import com.example.futsalmanager.ui.home.booking.BookingScreenRoute
 import com.example.futsalmanager.ui.login.LoginScreenRoute
 import com.example.futsalmanager.ui.login.email_verification.EmailVerificationScreenRoute
@@ -71,6 +72,7 @@ fun AppRoot() {
         val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         )
         { padding ->

@@ -25,10 +25,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,152 +57,157 @@ fun EmailVerificationScreen(
     onIntent: (EmailVerificationIntent) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .imePadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    )
-    {
-        // Back Button
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { onIntent(EmailVerificationIntent.OnBackClicked) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
-                )
-            }
-            Text(
-                "Back to login",
-                color = Color.Gray,
-            )
-        }
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // Header Section
-        Text(
-            text = "Verify Your Email",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Enter the verification code sent to your email",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Icon Circle
-        Box(
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
             modifier = Modifier
-                .size(80.dp)
-                .background(Color(0xFFE8F5E9), shape = CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Email,
-                contentDescription = null,
-                tint = Color(0xFF4CAF50),
-                modifier = Modifier.size(32.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "We've sent a 6-digit verification code to your email address. Please enter the code below.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
+                .fillMaxSize()
+                .padding(24.dp)
+                .imePadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Email Field Label
-        Text(
-            text = "EMAIL ADDRESS",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            placeholder = { Text("name@example.com") },
-            value = state.email,
-            onValueChange = {
-                onIntent(EmailVerificationIntent.EmailChanged(it))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            enabled = true,
-            shape = RoundedCornerShape(8.dp),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            )
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Verification Code Section
-        Text(
-            text = "VERIFICATION CODE",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OtpInputField(
-            value = state.code,
-            onValueChange = { onIntent(EmailVerificationIntent.CodeChanged(it)) }
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        LoadingButton(
-            text = "Verify Email",
-            loading = state.loading,
-            onClick = {
-                onIntent(EmailVerificationIntent.SubmitClicked)
-            },
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
-            icon = {
-                Icon(
-                    Icons.Default.CheckCircleOutline,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = Color.White
-                )
-            }
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        // Resend Text
-        Text(
-            text = buildAnnotatedString {
-                append("Didn't receive the code? ")
-                withStyle(
-                    style = SpanStyle(
-                        color = Color(0xFF81C784), fontWeight = FontWeight.Bold
+        {
+            // Back Button
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { onIntent(EmailVerificationIntent.OnBackClicked) }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
                     )
-                ) {
-                    append("Resend")
                 }
-            }, style = MaterialTheme.typography.bodyMedium
-        )
+                Text(
+                    "Back to login",
+                    color = Color.Gray,
+                )
+            }
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Header Section
+            Text(
+                text = "Verify Your Email",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Enter the verification code sent to your email",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Icon Circle
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(Color(0xFFE8F5E9), shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Email,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "We've sent a 6-digit verification code to your email address. Please enter the code below.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Email Field Label
+            Text(
+                text = "EMAIL ADDRESS",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                placeholder = { Text("name@example.com") },
+                value = state.email,
+                onValueChange = {
+                    onIntent(EmailVerificationIntent.EmailChanged(it))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                enabled = true,
+                shape = RoundedCornerShape(8.dp),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Verification Code Section
+            Text(
+                text = "VERIFICATION CODE",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OtpInputField(
+                value = state.code,
+                onValueChange = { onIntent(EmailVerificationIntent.CodeChanged(it)) }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            LoadingButton(
+                text = "Verify Email",
+                loading = state.loading,
+                onClick = {
+                    onIntent(EmailVerificationIntent.SubmitClicked)
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                icon = {
+                    Icon(
+                        Icons.Default.CheckCircleOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White
+                    )
+                }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            // Resend Text
+            Text(
+                text = buildAnnotatedString {
+                    append("Didn't receive the code? ")
+                    withStyle(
+                        style = SpanStyle(
+                            color = Color(0xFF81C784), fontWeight = FontWeight.Bold
+                        )
+                    ) {
+                        append("Resend")
+                    }
+                }, style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }
 

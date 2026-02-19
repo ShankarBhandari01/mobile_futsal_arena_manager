@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.HistoryEdu
@@ -50,11 +51,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -86,9 +89,12 @@ import com.example.futsalmanager.domain.model.PaymentMethod
 import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.model.SlotStatus
 import com.example.futsalmanager.domain.model.TimeSegment
+import com.example.futsalmanager.ui.component.BookingHeading
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
-import com.example.futsalmanager.ui.theme.BrandGreen
+import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 @Composable
@@ -115,16 +121,29 @@ fun ArenaBookingScreen(
     onBackClick: () -> Unit
 ) {
     var showRecurringDialog by remember { mutableStateOf(false) }
+    val modalBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     if (showRecurringDialog) {
         RecurringBookingSheetContent(
+            modalBottomSheetState,
             courts = state.courts,
             onConfirm = { court, frequency ->
+                scope.launch {
+                    modalBottomSheetState.hide()
+                }
                 onIntent(BookingIntent.SetupRecurring(court, frequency))
                 showRecurringDialog = false
+            },
+            onDismiss = {
+                showRecurringDialog = false
+                scope.launch {
+                    modalBottomSheetState.hide()
+                }
             }
         )
     }
+
     val listState = rememberLazyListState()
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -140,7 +159,7 @@ fun ArenaBookingScreen(
             }
     }
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text("Arena Details", fontSize = 18.sp) },
@@ -153,7 +172,7 @@ fun ArenaBookingScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.background,
                 )
             )
         }
@@ -162,7 +181,7 @@ fun ArenaBookingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         )
@@ -175,8 +194,7 @@ fun ArenaBookingScreen(
             item {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .fillMaxWidth(),
                 ) {
                     Column {
                         Text(
@@ -252,13 +270,12 @@ fun ArenaHeaderCard(state: BookingState) {
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     modifier = Modifier.size(70.dp),
@@ -364,8 +381,7 @@ fun RecurringBookingBanner(
     Surface(
         onClick = onClick,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(
@@ -447,28 +463,15 @@ fun BookingSelectionCard(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // --- Header Section ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Select Court & Date",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Step 1 of 3",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        BookingHeading(
+            "Select Court & Date",
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
 
         // --- Date Selection (Horizontal Strip) ---
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -580,52 +583,56 @@ fun DateItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val dayName = date.dayOfWeek.name.take(3) // MON, TUE
+    val isToday = date == LocalDate.now()
+    val dayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).uppercase()
     val dayNumber = date.dayOfMonth.toString()
 
+    val containerColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer
     val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     val subTextColor =
-        if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+        if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+
+    val borderColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        isToday -> MaterialTheme.colorScheme.outline
+        else -> MaterialTheme.colorScheme.outlineVariant
+    }
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        // Tonal elevation adds a slight shadow/depth
-        tonalElevation = if (isSelected) 4.dp else 0.dp,
-        modifier = Modifier.width(65.dp)
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
+        border = BorderStroke(if (isSelected || isToday) 2.dp else 1.dp, borderColor),
+        tonalElevation = if (isSelected) 4.dp else 1.dp,
+        modifier = Modifier.width(68.dp)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = dayName,
-                fontSize = 12.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = subTextColor,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                fontWeight = FontWeight.Medium
             )
+
             Text(
                 text = dayNumber,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
                 color = contentColor
             )
 
-            Spacer(Modifier.height(4.dp))
-
-            // Dot indicator for "Today"
-            if (date == LocalDate.now()) {
+            if (isToday) {
                 Box(
                     Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary)
                 )
             } else {
                 Spacer(Modifier.size(6.dp))
@@ -655,31 +662,17 @@ fun AvailableSlotsSection(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // --- Header Section ---
-        Row(
+        BookingHeading(
+            "Available Slots",
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Available Slots",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Step 2 of 3",
-                style = MaterialTheme.typography.bodySmall,
-                color = BrandGreen,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
+                .fillMaxWidth(),
+            step = 2,
+            stepCount = 3
+        )
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -687,21 +680,36 @@ fun AvailableSlotsSection(
         ) {
             items(TimeSegment.entries.toTypedArray()) { segment ->
                 val isSelected = selectedSegment == segment
+
+                val containerColor = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerLow
+                }
+                val contentColor = if (isSelected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                val borderColor = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                }
+
                 Surface(
                     onClick = { selectedSegment = segment },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) BrandGreen else Color.White,
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (isSelected) BrandGreen else Color.LightGray.copy(0.4f)
-                    ),
+                    color = containerColor,
+                    border = BorderStroke(width = 1.dp, color = borderColor),
                 ) {
                     Text(
                         text = segment.label,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isSelected) Color.White else Color.Gray
+                        color = contentColor
                     )
                 }
             }
@@ -715,7 +723,10 @@ fun AvailableSlotsSection(
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No slots available for this date.", color = Color.Gray)
+                Text(
+                    "No slots available for this date.",
+                    color = Color.Gray
+                )
             }
         } else if (filteredSlots.isEmpty()) {
             Box(
@@ -732,8 +743,7 @@ fun AvailableSlotsSection(
                 selectedSlot = state.selectedSlot,
                 onSlotSelected = onSlotSelected
             )
-
-            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Box {
                 StatusLegend()
             }
         }
@@ -752,107 +762,92 @@ fun TimeSlotCard(
     val isUnavailable = status == SlotStatus.UNAVAILABLE
     val isDisabled = isBooked || isUnavailable
 
-
-    // --- Colors ---
     val containerColor by animateColorAsState(
         targetValue = when {
-            isBooked -> Color(0xFFFFF2F2)
-            isSelected -> BrandGreen.copy(alpha = 0.12f)
-            isAvailable -> BrandGreen.copy(alpha = 0.22f)
-            else -> Color.White
+            isBooked -> MaterialTheme.colorScheme.errorContainer
+            isSelected -> MaterialTheme.colorScheme.primaryContainer
+            isAvailable -> MaterialTheme.colorScheme.surfaceContainerHigh
+            else -> MaterialTheme.colorScheme.surface
         },
-        label = "container"
+        label = "containerColor"
     )
 
-    val borderColor = when {
-        isSelected -> BrandGreen
-        isBooked -> Color(0xFFE57373)
-        else -> Color.LightGray.copy(alpha = 0.25f)
+    val contentColor = when {
+        isBooked -> MaterialTheme.colorScheme.onErrorContainer
+        isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
-    val textColor = when {
-        isBooked -> Color(0xFFD32F2F)
-        isSelected -> BrandGreen
-        else -> Color(0xFF222222)
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    val borderColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        isBooked -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.outlineVariant
     }
 
     Surface(
         onClick = { if (!isDisabled) onClick() },
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (isUnavailable) 0.45f else 1f),
+            .alpha(if (isUnavailable) 0.38f else 1f),
         shape = RoundedCornerShape(22.dp),
         color = containerColor,
-        border = if (isSelected)
-            BorderStroke(1.5.dp, BrandGreen)
-        else BorderStroke(1.dp, borderColor)
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+        tonalElevation = if (isAvailable && !isSelected) 2.dp else 0.dp
     ) {
-
         Box(Modifier.fillMaxSize()) {
 
-            // -------- Badge (top-right) --------
-            val badgeText = when {
-                isBooked -> "BOOKED"
-                slot.pricingBadge.isNotEmpty() -> slot.pricingBadge
-                else -> ""
-            }
-
+            // --- Badge Logic ---
+            val badgeText = if (isBooked) "BOOKED" else slot.pricingBadge
             if (badgeText.isNotEmpty()) {
                 Surface(
-                    color = if (isBooked) Color(0xFFE57373) else BrandGreen,
-                    shape = RoundedCornerShape(
-                        bottomStart = 14.dp,
-                        topEnd = 22.dp
-                    ),
+                    color = if (isBooked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    contentColor = if (isBooked) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(bottomStart = 14.dp, topEnd = 22.dp),
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(
                         badgeText,
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }
 
             Column(
                 modifier = Modifier
-                    .padding(14.dp)
+                    .padding(16.dp)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-
-                // -------- Time --------
                 Column {
                     Text(
                         text = slot.start.toDisplayTime(),
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = textColor
+                        color = contentColor
                     )
-
                     Text(
                         text = "to ${slot.end.toDisplayTime()}",
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                        style = MaterialTheme.typography.bodySmall,
+                        color = secondaryTextColor
                     )
                 }
 
-                // -------- Price / Status --------
                 if (isBooked) {
                     Text(
                         text = "Reserved",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFD32F2F)
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error
                     )
                 } else {
                     Text(
                         text = "Rs ${slot.price}",
-                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
-                        color = textColor
+                        color = contentColor
                     )
                 }
             }
@@ -907,105 +902,107 @@ fun PaymentSection(
     selectedMethod: PaymentMethod,
     onMethodSelected: (PaymentMethod) -> Unit
 ) {
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val accentColor = MaterialTheme.colorScheme.primary
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF1F3F4).copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(containerColor),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // --- Header Section ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Payment Method",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Step 3 of 3",
-                style = MaterialTheme.typography.bodySmall,
-                color = BrandGreen,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        // Summary Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    "${state.displayStartTime} - ${state.displayEndTime}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-
-                Text(
-                    state.selectedCourt?.name ?: "",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-            }
-
-            Text(
-                "$${state.selectedCourt?.basePrice}",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 22.sp
-            )
-        }
-
-        Text(
-            state.selectedPaymentMethod.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.Gray
+        BookingHeading(
+            "Payment Method",
+            modifier = Modifier
+                .fillMaxWidth().padding(16.dp),
+            step = 3,
+            stepCount = 3
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            PaymentOptionCard(
-                modifier = Modifier.weight(1f),
-                title = "Pay Online",
-                subtitle = "Instant confirmation",
-                icon = Icons.Default.CreditCard,
-                isSelected = selectedMethod == PaymentMethod.ONLINE,
-                onClick = { onMethodSelected(PaymentMethod.ONLINE) }
-            )
-            PaymentOptionCard(
-                modifier = Modifier.weight(1f),
-                title = "Pay Cash",
-                subtitle = "Pay at venue",
-                icon = Icons.Default.Payments,
-                isSelected = selectedMethod == PaymentMethod.CASH,
-                onClick = { onMethodSelected(PaymentMethod.CASH) }
-            )
-            PaymentOptionCard(
-                modifier = Modifier.weight(1f),
-                title = "Bank Transfer",
-                subtitle = "Manual verification",
-                icon = Icons.Default.AccountBalance,
-                isSelected = selectedMethod == PaymentMethod.BANK,
-                onClick = { onMethodSelected(PaymentMethod.BANK) }
-            )
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "${state.displayStartTime} - ${state.displayEndTime}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = state.selectedCourt?.name ?: "Unknown Court",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = "$${state.selectedCourt?.basePrice}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = accentColor
+                )
+            }
         }
 
-        // Final Action Button
+        // Horizontal Selection with spacing
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val options = listOf(
+                Triple("Online", "Instant", Icons.Default.CreditCard),
+                Triple("Cash", "At venue", Icons.Default.Payments),
+                Triple("Bank", "Manual", Icons.Default.AccountBalance)
+            )
+
+            val methods = PaymentMethod.entries.toTypedArray()
+
+            methods.forEachIndexed { index, method ->
+                val (title, sub, icon) = options[index]
+                PaymentOptionCard(
+                    modifier = Modifier.weight(1f),
+                    title = title,
+                    subtitle = sub,
+                    icon = icon,
+                    isSelected = selectedMethod == method,
+                    onClick = { onMethodSelected(method) }
+                )
+            }
+        }
+
         Button(
             onClick = { /* Process Booking */ },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
+                .height(56.dp),
+            shape = MaterialTheme.shapes.medium,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = accentColor,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
-            Icon(Icons.Default.CreditCard, null)
-            Spacer(Modifier.width(8.dp))
-            Text("Reserve & Pay Online", fontWeight = FontWeight.Bold)
+            val buttonText = when (selectedMethod) {
+                PaymentMethod.ONLINE -> "Reserve & Pay Online"
+                PaymentMethod.CASH -> "Book Now, Pay Later"
+                PaymentMethod.BANK -> "Generate Transfer Details"
+            }
+            Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(
+                buttonText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -1015,68 +1012,119 @@ fun StatusLegend() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(Color(0xFFC8E6C9), "Available")
-        LegendItem(Color(0xFFFFF9C4), "On Hold")
-        LegendItem(Color(0xFFFFCDD2), "Booked")
-        LegendItem(Color(0xFFE0E0E0), "Unavailable")
+        // Available -> Primary
+        LegendItem(MaterialTheme.colorScheme.primaryContainer, "Available")
+
+        // On Hold -> Tertiary
+        LegendItem(MaterialTheme.colorScheme.tertiaryContainer, "On Hold")
+
+        // Booked -> Error
+        LegendItem(MaterialTheme.colorScheme.errorContainer, "Booked")
+
+        // Unavailable -> Surface Variant
+        LegendItem(MaterialTheme.colorScheme.surfaceVariant, "Unavailable")
     }
 }
 
 @Composable
 fun LegendItem(color: Color, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            6.dp
+        )
+    ) {
         Box(
-            Modifier
+            modifier = Modifier
                 .size(12.dp)
                 .clip(CircleShape)
                 .background(color)
         )
-        Spacer(Modifier.width(6.dp))
-        Text(label, fontSize = 12.sp, color = Color.Gray)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
 @Composable
 fun PaymentOptionCard(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     title: String,
     subtitle: String,
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+
+    val containerColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    }
+
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    val secondaryContentColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val borderColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outlineVariant
+    }
+
     Surface(
         onClick = onClick,
         modifier = modifier.height(110.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color.White else Color.Transparent,
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) BrandGreen else Color.LightGray.copy(alpha = 0.5f)
-        )
+            color = borderColor
+        ),
+        tonalElevation = if (isSelected) 0.dp else 1.dp
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, null, tint = if (isSelected) Color.Black else Color.Gray)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(28.dp)
+            )
+
             Spacer(Modifier.height(8.dp))
+
             Text(
-                title,
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+                color = contentColor,
                 textAlign = TextAlign.Center
             )
+
             Text(
-                subtitle,
-                fontSize = 10.sp,
-                color = Color.Gray,
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryContentColor,
                 textAlign = TextAlign.Center,
-                lineHeight = 12.sp
+                lineHeight = 14.sp
             )
         }
     }

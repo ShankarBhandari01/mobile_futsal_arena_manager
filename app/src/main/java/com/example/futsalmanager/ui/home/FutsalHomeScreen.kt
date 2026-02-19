@@ -40,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -100,6 +101,7 @@ import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
 import com.example.futsalmanager.ui.home.navigation_drawer.FutsalDrawerSheet
 import com.example.futsalmanager.ui.home.viewModels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.android.material.loadingindicator.LoadingIndicator
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -171,7 +173,7 @@ fun FutsalHomeScreenRoute(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FutsalHomeScreen(
     modifier: Modifier = Modifier,
@@ -253,7 +255,11 @@ fun FutsalHomeScreen(
                                     drawerState.close()
                             }
                         }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(
+                                Icons.Default.Menu,
+                                tint = MaterialTheme.colorScheme.primary,
+                                contentDescription = "Menu"
+                            )
                         }
                     }, actions = {
                         Surface(
@@ -286,13 +292,18 @@ fun FutsalHomeScreen(
                     .fillMaxSize()
                     .padding(padding),
                 indicator = {
-                    PullToRefreshDefaults.Indicator(
-                        state = pullToRefreshState,
-                        isRefreshing = state.isLoading,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = Color.White,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 16.dp)
+                    ) {
+                        PullToRefreshDefaults.LoadingIndicator(
+                            state = pullToRefreshState,
+                            isRefreshing = state.isLoading,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             ) {
                 LazyColumn(
