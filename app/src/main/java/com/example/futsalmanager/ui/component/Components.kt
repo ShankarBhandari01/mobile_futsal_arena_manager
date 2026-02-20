@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.LocationOff
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.NearMe
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -622,7 +623,26 @@ fun ArenaCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            if (arena.distance != null) {
+                // --- Distance Calculation
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val distance = arena.distance.toString() + " km"
+                    Icon(
+                        imageVector = Icons.Outlined.NearMe,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = distance,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
             // --- BOTTOM SECTION: Action ---
             Row(
@@ -650,7 +670,9 @@ fun ArenaCard(
 @Preview(showBackground = true)
 @Composable
 fun ArenaCardPreview() {
-    //ArenaCard(arenas = Arenas())
+    ArenaCard(
+        arena = Arenas()
+    )
 }
 
 @Preview(showBackground = true)
@@ -1091,6 +1113,9 @@ fun HomePermissionWrapper(
         .filter { it.permission.contains("LOCATION") }
         .all { it.status.isGranted }
 
+    if (locationGranted) {
+        onPermissionChanged(true)
+    }
     Box(Modifier.fillMaxSize()) {
         content()
 

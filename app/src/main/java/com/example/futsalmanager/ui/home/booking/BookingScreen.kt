@@ -271,7 +271,7 @@ fun ArenaHeaderCard(state: BookingState) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -279,8 +279,7 @@ fun ArenaHeaderCard(state: BookingState) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     modifier = Modifier.size(70.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     AsyncImage(
                         model = arena?.logoUrl ?: R.drawable.reshot,

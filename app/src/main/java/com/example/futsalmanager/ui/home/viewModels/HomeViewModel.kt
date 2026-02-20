@@ -71,7 +71,7 @@ class HomeViewModel @Inject constructor(
                 if (isEnabled && isGranted) {
                     useCase.userLocation.distinctUntilChanged()
                 } else {
-                    flowOf(null)
+                   flowOf(null)
                 }
             }
             .onEach { loc ->
@@ -153,7 +153,6 @@ class HomeViewModel @Inject constructor(
                 _state.update {
                     it.copy(isPermissionGranted = true)
                 }
-
 
             // Group navigation intents together
             HomeIntent.MarketPlaceClicked, HomeIntent.MyBookingClicked, HomeIntent.MyProfileClicked, HomeIntent.ConfirmLogout -> handleNavigation(

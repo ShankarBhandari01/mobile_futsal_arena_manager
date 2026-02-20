@@ -693,7 +693,7 @@ fun StepTwoSchedule(
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(
                     1.dp,
-                    if (selectedTime != null) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+                    if (selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {

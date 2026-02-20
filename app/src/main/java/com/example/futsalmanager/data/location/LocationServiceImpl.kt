@@ -17,9 +17,14 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import okhttp3.Dispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -62,40 +67,32 @@ class LocationServiceImpl @Inject constructor(
         awaitClose {
             context.unregisterReceiver(receiver)
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     @SuppressLint("MissingPermission")
     override fun getLiveLocation(): Flow<LocationModel> = callbackFlow {
 
         val callback = object : LocationCallback() {
-
             override fun onLocationResult(result: LocationResult) {
                 val bestLocation = result.lastLocation ?: result.locations.firstOrNull()
                 bestLocation?.let {
-                    Log.e(
-                        "LocationService",
-                        "Update failed: ${bestLocation.latitude}, ${bestLocation.longitude}"
-                    )
+                    Log.d("LocationService", "Update: ${it.latitude}, ${it.longitude}")
                     trySend(LocationModel(it.latitude, it.longitude))
                 }
             }
         }
 
-        val request = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            5000L
-        )
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
             .setMinUpdateIntervalMillis(2000L)
             .build()
 
         client.requestLocationUpdates(request, callback, Looper.getMainLooper())
             .addOnFailureListener { e ->
-                Log.e("LocationService", "Update failed: ${e.message}")
                 close(e)
             }
 
         awaitClose {
             client.removeLocationUpdates(callback)
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }
