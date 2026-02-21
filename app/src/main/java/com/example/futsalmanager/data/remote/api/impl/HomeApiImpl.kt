@@ -37,41 +37,4 @@ class HomeApiImpl @Inject constructor(
         }
     }
 
-    override suspend fun arenaSubDomain(subDomain: String): Result<Arenas> {
-        return safeApiCall {
-            client.get(ApiRegistry.ARENA_LIST) {
-                url {
-                    path(ApiRegistry.ARENA_LIST, subDomain)
-                }
-            }.body<Arenas>()
-        }
-    }
-
-    override suspend fun arenasSubDomainCourts(subDomain: String): Result<List<CourtDto>> {
-        return safeApiCall {
-            client.get(ApiRegistry.ARENA_LIST) {
-                url {
-                    path(ApiRegistry.ARENA_LIST, subDomain, ApiRegistry.COURTS)
-                }
-            }.body<List<CourtDto>>()
-        }
-    }
-
-    override suspend fun getCourtSlots(
-        subDomain: String,
-        courtId: String,
-        date: String,
-        includeStatus: Boolean
-    ): Result<List<Slot>> {
-        return safeApiCall {
-            client.get(ApiRegistry.ARENA_LIST) {
-                url {
-                    path(ApiRegistry.ARENA_LIST, subDomain, ApiRegistry.COURTS, courtId, ApiRegistry.SLOT)
-                    parameter("date", date)
-                    parameter("includeStatus", includeStatus)
-                }
-            }.body<List<Slot>>()
-        }
-    }
-
 }

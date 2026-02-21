@@ -1,6 +1,5 @@
 package com.example.futsalmanager.ui.home.viewModels
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.domain.model.FilterParams
@@ -10,7 +9,6 @@ import com.example.futsalmanager.ui.home.HomeEffect
 import com.example.futsalmanager.ui.home.HomeIntent
 import com.example.futsalmanager.ui.home.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -35,7 +33,6 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val useCase: HomeUseCase,
-    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())

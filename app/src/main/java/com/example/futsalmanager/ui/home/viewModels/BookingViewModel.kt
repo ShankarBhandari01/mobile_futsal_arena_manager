@@ -5,14 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.core.utils.Common.toDisplayDate
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
-import com.example.futsalmanager.domain.usecase.HomeUseCase
+import com.example.futsalmanager.domain.usecase.BookingUseCase
 import com.example.futsalmanager.ui.home.booking.BookingEffect
 import com.example.futsalmanager.ui.home.booking.BookingIntent
 import com.example.futsalmanager.ui.home.booking.BookingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -23,14 +23,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookingViewModel @Inject constructor(
-    private val useCase: HomeUseCase,
+    private val useCase: BookingUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val arenaId = savedStateHandle.get<String>("id") ?: ""
 
     private val _state = MutableStateFlow(BookingState(isLoading = true))
-    val state: StateFlow<BookingState> = _state
+    val state = _state.asStateFlow()
+
 
     private val _effect = Channel<BookingEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
@@ -146,6 +147,10 @@ class BookingViewModel @Inject constructor(
             }
 
             is BookingIntent.SetupRecurring -> {
+
+            }
+
+            is BookingIntent.MakePayment -> {
 
             }
         }

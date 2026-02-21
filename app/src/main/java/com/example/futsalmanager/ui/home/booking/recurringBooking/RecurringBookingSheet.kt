@@ -1,4 +1,4 @@
-package com.example.futsalmanager.ui.home.booking
+package com.example.futsalmanager.ui.home.booking.recurringBooking
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -59,6 +60,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -69,16 +71,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.core.utils.Common
 import com.example.futsalmanager.domain.model.Courts
+import com.example.futsalmanager.domain.model.Frequency
+import com.example.futsalmanager.domain.model.PaymentMethod
+import com.example.futsalmanager.ui.home.viewModels.RecurringBookingViewModel
 import com.example.futsalmanager.ui.theme.BrandGreen
 import java.time.DayOfWeek
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -88,15 +95,15 @@ import java.util.Locale
 fun RecurringBookingSheetContent(
     sheetState: SheetState,
     courts: List<Courts?>,
-    onConfirm: (Courts, String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // viewmodel
+    val viewModel = hiltViewModel<RecurringBookingViewModel>()
+    // state
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     // Current step state
     var currentStep by remember { mutableIntStateOf(1) }
-
-    // Track selections across steps
-    var selectedCourt by remember { mutableStateOf<Courts?>(null) }
-    var selectedFreq by remember { mutableStateOf("Weekly") }
 
 
     ModalBottomSheet(
@@ -141,10 +148,11 @@ fun RecurringBookingSheetContent(
                         )
                     }
                 }
+                Spacer(Modifier.height(8.dp))
                 Text(
                     "Reserve the same time slot automatically on a regular schedule.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 // ---. Static Stepper (Always Visible) ---
@@ -161,14 +169,14 @@ fun RecurringBookingSheetContent(
                         modifier = Modifier
                             .width(40.dp)
                             .padding(horizontal = 8.dp),
-                        color = if (currentStep > 1) BrandGreen else Color.LightGray
+                        color = if (currentStep > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
                     )
                     StepCircle(number = "2", isActive = currentStep == 2, isDone = currentStep > 2)
                     HorizontalDivider(
                         modifier = Modifier
                             .width(40.dp)
                             .padding(horizontal = 8.dp),
-                        color = if (currentStep > 2) BrandGreen else Color.LightGray
+                        color = if (currentStep > 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
                     )
                     StepCircle(number = "3", isActive = currentStep == 3, isDone = currentStep > 3)
                 }
@@ -177,12 +185,10 @@ fun RecurringBookingSheetContent(
                 AnimatedContent(
                     targetState = currentStep,
                     transitionSpec = {
-                        // If we are going to a higher step, slide in from right
                         if (targetState > initialState) {
                             (slideInHorizontally { it } + fadeIn()).togetherWith(
                                 slideOutHorizontally { -it } + fadeOut())
                         } else {
-                            // If we are going back, slide in from left
                             (slideInHorizontally { -it } + fadeIn()).togetherWith(
                                 slideOutHorizontally { it } + fadeOut())
                         }.using(SizeTransform(clip = false))
@@ -194,19 +200,25 @@ fun RecurringBookingSheetContent(
                         when (step) {
                             1 -> StepOneCourtSelection(
                                 courts = courts,
+                                state = state,
+                                onIntent = viewModel::dispatch,
                                 onCourtSelected = {
-                                    selectedCourt = it;
                                     currentStep = 2
                                 }
                             )
 
                             2 -> StepTwoSchedule(
+                                state = state,
+                                onIntent = viewModel::dispatch,
                                 onNext = { currentStep = 3 },
                                 onBack = { currentStep = 1 }
                             )
 
                             3 -> StepThreeReview(
-                                onConfirm = { onConfirm(selectedCourt!!, selectedFreq) },
+                                state = state,
+                                onIntent = viewModel::dispatch,
+                                onConfirm = {
+                                },
                                 onBack = { currentStep = 2 }
                             )
                         }
@@ -221,280 +233,79 @@ fun RecurringBookingSheetContent(
 
 @Composable
 fun StepThreeReview(
+    state: RecurringBookingState,
+    onIntent: (RecurringBookingIntent) -> Unit,
     onConfirm: () -> Unit,
     onBack: () -> Unit
 ) {
-    var isSelected by remember { mutableStateOf(false) }
-    var sessionCount by remember { mutableIntStateOf(1) }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Frequency", fontWeight = FontWeight.Bold)
-        Surface(
-            onClick = {
-
-            },
-            shape = MaterialTheme.shapes.medium,
-            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-
-            border = BorderStroke(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.fillMaxWidth()
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // --- Frequency Section ---
+        Text(
+            "Frequency",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
         )
-        {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Weekend,
-                        contentDescription = null,
-                        tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                }
 
-                Spacer(Modifier.width(16.dp))
-
-                Column(Modifier.weight(1f)) {
-                    Text("Weekly", fontWeight = FontWeight.Bold)
-                    Text("Every week on the same day", fontSize = 12.sp, color = Color.Gray)
-                }
-            }
-        }
-        Surface(
-            onClick = {
-
-            },
-            shape = RoundedCornerShape(12.dp),
-            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-
-            border = BorderStroke(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.fillMaxWidth()
+        val frequencyOptions = listOf(
+            Triple("Weekly", "Every week on the same day", Icons.Default.Weekend),
+            Triple("Bi-Weekly", "Every 2 weeks", Icons.Default.EventRepeat)
         )
-        {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Weekend,
-                        contentDescription = null,
-                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                }
 
-                Spacer(Modifier.width(16.dp))
-
-                Column(Modifier.weight(1f)) {
-                    Text("Bi-weekly", fontWeight = FontWeight.Bold)
-                    Text("Every 2 weeks", fontSize = 12.sp, color = Color.Gray)
-                }
-            }
+        // Dynamically generating frequency Options from an enum/list
+        Frequency.entries.forEachIndexed { index, frequency ->
+            val (title, sub, icon) = frequencyOptions[index]
+            SelectableOptionCard(
+                title = title,
+                subtitle = sub,
+                icon = icon,
+                isSelected = state.frequency == frequency,
+                onClick = { onIntent(RecurringBookingIntent.UpdateFrequency(frequency)) }
+            )
         }
-        Spacer(Modifier.height(16.dp))
 
+        Spacer(Modifier.height(8.dp))
+        // --- Session Counter ---
         SessionCounter(
-            sessions = sessionCount,
-            onSessionsChange = { sessionCount = it }
+            sessions = state.sessionCount,
+            onSessionsChange = { onIntent(RecurringBookingIntent.UpdateSessionCount(it)) }
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
+
+        // --- Payment Section ---
         Text(
             "Payment Method",
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
         )
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                var isSelected by remember { mutableStateOf(false) }
-                Surface(
-                    onClick = {
 
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        val paymentOptions = listOf(
+            Triple("Pay Per Session", "Individually", Icons.Default.Payment),
+            Triple("Monthly", "Once per month", Icons.Default.CalendarMonth),
+            Triple("Pay at Venue", "Cash at venue", Icons.Default.Storefront)
+        )
 
-                    border = BorderStroke(
-                        width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Payment,
-                                contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(Modifier.weight(1f)) {
-                            Text("Pay Per Session", fontWeight = FontWeight.Bold)
-                            Text(
-                                "Pay for each session individually",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                }
-
-                Surface(
-                    onClick = {
-
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-
-                    border = BorderStroke(
-                        width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(Modifier.weight(1f)) {
-                            Text("Monthly", fontWeight = FontWeight.Bold)
-                            Text(
-                                "Pay once per month",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                }
-
-                Surface(
-                    onClick = {
-
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-
-                    border = BorderStroke(
-                        width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.EventRepeat,
-                                contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(Modifier.weight(1f)) {
-                            Text("Pay at Venue", fontWeight = FontWeight.Bold)
-                            Text(
-                                "Pay cash at the venue",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Payment,
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Select Card for Auto-Payment",
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-
-                    )
-                }
-
-
-            }
+        // Dynamically generating payment options from an enum/list
+        PaymentMethod.entries.forEachIndexed { index, method ->
+            val (title, sub, icon) = paymentOptions[index]
+            SelectableOptionCard(
+                title = title,
+                subtitle = sub,
+                icon = icon,
+                isSelected = state.selectedPaymentMethod == method,
+                onClick = { onIntent(RecurringBookingIntent.UpdatePaymentMethod(method)) }
+            )
         }
 
-        Spacer(Modifier.height(16.dp))
+        // --- Footer Navigation ---
+        Spacer(Modifier.weight(1f)) // Push buttons to bottom
         StepNavigationButtons(
             onBack = onBack,
             onNext = onConfirm,
-            nextButtonEnabled = true,
+            nextButtonEnabled = state.isValid(),
             nextButtonText = "Create Recurring Booking"
         )
     }
-
 }
 
 @Composable
@@ -528,7 +339,7 @@ fun SessionCounter(
                 Icon(
                     imageVector = Icons.Default.RemoveCircleOutline,
                     contentDescription = "Decrease",
-                    tint = if (sessions > 1) BrandGreen else Color.Gray
+                    tint = if (sessions > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -536,7 +347,7 @@ fun SessionCounter(
             Surface(
                 modifier = Modifier.width(80.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.background,
                 border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
             ) {
                 Text(
@@ -555,7 +366,7 @@ fun SessionCounter(
                 Icon(
                     imageVector = Icons.Default.AddCircleOutline,
                     contentDescription = "Increase",
-                    tint = BrandGreen
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -568,28 +379,90 @@ fun SessionCounter(
             Text(
                 text = "You are booking for $sessionCount consecutive weeks.",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 @Composable
-fun StepOneCourtSelection(
-    courts: List<Courts?>,
-    onCourtSelected: (Courts) -> Unit
+fun SelectableOptionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
+    val containerColor =
+        if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val contentColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val iconContainerColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val iconTint =
+        if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = containerColor,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = iconContainerColor,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = contentColor
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StepOneCourtSelection(
+    state: RecurringBookingState,
+    onIntent: (RecurringBookingIntent) -> Unit,
+    courts: List<Courts?>,
+    onCourtSelected: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Select Court", fontWeight = FontWeight.Bold)
-
         var expanded by remember { mutableStateOf(false) }
-        var selectedCourt by remember { mutableStateOf<Courts?>(null) }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
                 .clickable { expanded = true }
                 .padding(16.dp)
         ) {
@@ -599,8 +472,9 @@ fun StepOneCourtSelection(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        selectedCourt?.name ?: "Choose a court",
-                        color = if (selectedCourt == null) Color.Gray else Color.Black
+                        state.selectedCourt?.name ?: "Choose a court",
+                        color = if (state.selectedCourt == null)
+                            MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.onBackground
                     )
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
@@ -609,7 +483,7 @@ fun StepOneCourtSelection(
                     onDismissRequest = { expanded = false },
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
-                        .background(Color.White)
+                        .background(color = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     courts.forEach { court ->
                         DropdownMenuItem(
@@ -618,18 +492,22 @@ fun StepOneCourtSelection(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(court!!.name, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        court!!.name,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                     Text(
                                         "Rs ${court.basePrice}/hr",
-                                        color = BrandGreen,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             },
                             onClick = {
-                                selectedCourt = court
+                                onIntent(RecurringBookingIntent.OnCourtSelected(court))
                                 expanded = false
-                                onCourtSelected(court!!)
+                                onCourtSelected()
                             }
                         )
                     }
@@ -643,11 +521,11 @@ fun StepOneCourtSelection(
 
 @Composable
 fun StepTwoSchedule(
+    state: RecurringBookingState,
+    onIntent: (RecurringBookingIntent) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit
 ) {
-    var selectedDays by remember { mutableStateOf(setOf<DayOfWeek>()) }
-    var selectedTime by remember { mutableStateOf<LocalTime?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
     val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a") }
@@ -666,13 +544,15 @@ fun StepTwoSchedule(
             maxItemsInEachRow = 4
         ) {
             DayOfWeek.entries.forEach { day ->
-                val isSelected = selectedDays.contains(day)
+                val isSelected = state.selectedDay == day
                 FilterChip(
                     selected = isSelected,
                     onClick = {
-                        selectedDays = if (isSelected) selectedDays - day else selectedDays + day
+                        onIntent(RecurringBookingIntent.OnDaySelected(day))
                     },
-                    label = { Text(day.getDisplayName(TextStyle.SHORT, Locale.getDefault())) },
+                    label = {
+                        Text(day.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                    },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -693,7 +573,7 @@ fun StepTwoSchedule(
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(
                     1.dp,
-                    if (selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant
+                    if (state.selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -703,14 +583,14 @@ fun StepTwoSchedule(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = selectedTime?.format(timeFormatter) ?: "Select Time ",
-                        color = if (selectedTime == null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = if (selectedTime != null) FontWeight.Bold else FontWeight.Normal
+                        text = state.selectedTime?.format(timeFormatter) ?: "Select Time ",
+                        color = if (state.selectedTime == null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (state.selectedTime != null) FontWeight.Bold else FontWeight.Normal
                     )
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = if (selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (state.selectedTime != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -731,7 +611,7 @@ fun StepTwoSchedule(
                             )
                         },
                         onClick = {
-                            selectedTime = time
+                            onIntent(RecurringBookingIntent.OnTimeSelected(time))
                             expanded = false
                         }
                     )
@@ -743,7 +623,7 @@ fun StepTwoSchedule(
         StepNavigationButtons(
             onBack = onBack,
             onNext = onNext,
-            nextButtonEnabled = selectedDays.isNotEmpty() && selectedTime != null,
+            nextButtonEnabled = state.isScreenTwoValid(),
             nextButtonText = "Next"
         )
     }
@@ -786,13 +666,29 @@ fun StepCircle(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @PreviewScreenSizes
 @Composable
 fun RecurringBookingSheetContentPreview() {
-    StepTwoSchedule(onNext = {}, onBack = {})
-    // RecurringBookingSheetContent(courts = emptyList(), onConfirm = { _, _ -> })
-    //StepThreeReview(onConfirm = {}, onBack = {})
+    /*StepTwoSchedule(
+        state = RecurringBookingState(),
+         onIntent = {},
+          onNext = {}, onBack = {}
+      )*/
+
+    RecurringBookingSheetContent(
+        courts = emptyList(),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        onDismiss = {}
+    )
+
+    /* StepThreeReview(
+         onConfirm = {},
+         onBack = {},
+         state = RecurringBookingState(),
+         onIntent = {}
+     )*/
 }
 
 @Composable

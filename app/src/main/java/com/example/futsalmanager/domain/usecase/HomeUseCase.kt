@@ -56,27 +56,7 @@ class HomeUseCase @Inject constructor(
             lng = if (shouldSortByDistance) location?.longitude else null,
         )
     }
-
+    // home areana load
     val arenas = repo.getArenaListFromDB()
 
-    fun arenaById(id: String) = repo.getArenaWithCourts(id)
-
-    suspend fun refreshArenaDetailsWithCourts(id: String) {
-        repo.getArenaById(id)
-            .filterNotNull()
-            .first()
-            .subdomain
-            ?.let {
-                repo.arenasSubDomainCourts(it)
-            }
-    }
-
-    suspend fun getCourtSlots(
-        subDomain: String,
-        courtId: String,
-        date: String,
-        includeStatus: Boolean
-    ):Result<List<Slot>> {
-        return repo.getCourtSlots(subDomain, courtId, date, includeStatus)
-    }
 }

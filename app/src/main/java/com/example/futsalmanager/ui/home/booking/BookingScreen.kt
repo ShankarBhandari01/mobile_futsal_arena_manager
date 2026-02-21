@@ -90,6 +90,7 @@ import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.model.SlotStatus
 import com.example.futsalmanager.domain.model.TimeSegment
 import com.example.futsalmanager.ui.component.BookingHeading
+import com.example.futsalmanager.ui.home.booking.recurringBooking.RecurringBookingSheetContent
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -128,13 +129,6 @@ fun ArenaBookingScreen(
         RecurringBookingSheetContent(
             modalBottomSheetState,
             courts = state.courts,
-            onConfirm = { court, frequency ->
-                scope.launch {
-                    modalBottomSheetState.hide()
-                }
-                onIntent(BookingIntent.SetupRecurring(court, frequency))
-                showRecurringDialog = false
-            },
             onDismiss = {
                 showRecurringDialog = false
                 scope.launch {
@@ -256,6 +250,9 @@ fun ArenaBookingScreen(
                         selectedMethod = state.selectedPaymentMethod,
                         onMethodSelected = { method ->
                             onIntent(BookingIntent.SelectPaymentMethod(method))
+                        },
+                        onPaymentButtonClick = {
+                            onIntent(BookingIntent.MakePayment)
                         }
                     )
                 }
@@ -899,7 +896,8 @@ fun TimeSlotGrid(
 fun PaymentSection(
     state: BookingState,
     selectedMethod: PaymentMethod,
-    onMethodSelected: (PaymentMethod) -> Unit
+    onMethodSelected: (PaymentMethod) -> Unit,
+    onPaymentButtonClick: () -> Unit = {}
 ) {
     val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     val accentColor = MaterialTheme.colorScheme.primary
@@ -980,7 +978,7 @@ fun PaymentSection(
         }
 
         Button(
-            onClick = { /* Process Booking */ },
+            onClick = { onPaymentButtonClick},
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

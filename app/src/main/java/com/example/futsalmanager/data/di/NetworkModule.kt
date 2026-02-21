@@ -2,8 +2,10 @@ package com.example.futsalmanager.data.di
 
 import android.content.Context
 import com.example.futsalmanager.data.remote.api.AuthApi
+import com.example.futsalmanager.data.remote.api.BookingApi
 import com.example.futsalmanager.data.remote.api.HomeApi
 import com.example.futsalmanager.data.remote.api.impl.AuthApiImpl
+import com.example.futsalmanager.data.remote.api.impl.BookingApiImpl
 import com.example.futsalmanager.data.remote.api.impl.HomeApiImpl
 import com.example.futsalmanager.data.remote.client.HttpClientFactory
 import com.example.futsalmanager.domain.session.SessionStorage
@@ -48,5 +50,9 @@ abstract class NetworkModule {
     @Binds
     @Singleton
     abstract fun bindHomeApi(impl: HomeApiImpl): HomeApi
+
+    @Binds
+    @Singleton
+    abstract fun bindBookingApi(impl: BookingApiImpl): BookingApi
 
 }

@@ -626,7 +626,11 @@ fun ArenaCard(
             if (arena.distance != null) {
                 // --- Distance Calculation
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val distance = arena.distance.toString() + " km"
+                    val distance = if (arena.distance < 1) {
+                        "${(arena.distance * 1000).toInt()} m"
+                    } else {
+                        "${arena.distance.toInt()} km"
+                    }
                     Icon(
                         imageVector = Icons.Outlined.NearMe,
                         contentDescription = null,
