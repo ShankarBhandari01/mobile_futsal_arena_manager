@@ -52,6 +52,9 @@ android {
 }
 
 dependencies {
+
+    implementation("com.stripe:stripe-android:22.8.1")
+
     implementation(libs.material)
     // backward compatibility library like instant, LocalDate,LocalTime
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")

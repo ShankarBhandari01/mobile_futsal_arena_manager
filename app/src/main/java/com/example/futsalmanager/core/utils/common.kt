@@ -25,6 +25,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 
 object Common {
 
@@ -134,4 +135,7 @@ object Common {
         return slots
     }
 
+    fun generateIdempotencyKey(): String {
+        return UUID.randomUUID().toString()
+    }
 }

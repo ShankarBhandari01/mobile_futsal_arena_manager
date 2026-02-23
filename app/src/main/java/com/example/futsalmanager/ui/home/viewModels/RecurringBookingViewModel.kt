@@ -39,7 +39,7 @@ class RecurringBookingViewModel @Inject constructor(
             }
 
             is RecurringBookingIntent.UpdatePaymentMethod -> {
-                _state.update { it.copy(selectedPaymentMethod = intent.paymentMethod) }
+                _state.update { it.copy(selectedPaymentStyle = intent.paymentMethod) }
             }
 
             is RecurringBookingIntent.UpdateSessionCount -> {

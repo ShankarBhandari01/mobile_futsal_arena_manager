@@ -15,7 +15,7 @@ data class Slot(
     val slotStatus: SlotStatus
         get() = try {
             SlotStatus.valueOf(status.uppercase())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             SlotStatus.UNAVAILABLE // Fallback for unknown statuses
         }
 }

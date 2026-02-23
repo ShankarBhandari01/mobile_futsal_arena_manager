@@ -20,4 +20,13 @@ object ApiRegistry {
     // home api
     const val ARENA_LIST = "discover/arenas"
 
+    const val BOOKINGS = "bookings"
+
+    // reserve
+    const val RESERVE = "reserve"
+
+    // create payment
+    const val CREATE_PAYMENT = "create-payment"
+
+
 }

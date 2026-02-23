@@ -3,6 +3,7 @@ package com.example.futsalmanager.ui.home.booking.recurringBooking
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.domain.model.Frequency
 import com.example.futsalmanager.domain.model.PaymentMethod
+import com.example.futsalmanager.domain.model.PaymentStyle
 import com.example.futsalmanager.domain.model.Slot
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -14,7 +15,7 @@ sealed interface RecurringBookingIntent {
     data class OnDaySelected(val day: DayOfWeek) : RecurringBookingIntent
     data class UpdateFrequency(val frequency: Frequency) : RecurringBookingIntent
     data class UpdateSessionCount(val sessionCount: Int) : RecurringBookingIntent
-    data class UpdatePaymentMethod(val paymentMethod: PaymentMethod) : RecurringBookingIntent
+    data class UpdatePaymentMethod(val paymentMethod: PaymentStyle) : RecurringBookingIntent
     object Submit : RecurringBookingIntent
 
 

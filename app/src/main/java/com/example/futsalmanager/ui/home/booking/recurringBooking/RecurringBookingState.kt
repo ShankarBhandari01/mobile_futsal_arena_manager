@@ -2,7 +2,7 @@ package com.example.futsalmanager.ui.home.booking.recurringBooking
 
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.domain.model.Frequency
-import com.example.futsalmanager.domain.model.PaymentMethod
+import com.example.futsalmanager.domain.model.PaymentStyle
 import com.example.futsalmanager.domain.model.Slot
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -18,11 +18,11 @@ data class RecurringBookingState(
     val selectedDay: DayOfWeek? = null,
     val selectedTime: LocalTime? = null,
 
-    val selectedPaymentMethod: PaymentMethod? = PaymentMethod.ONLINE,
+    val selectedPaymentStyle: PaymentStyle? = PaymentStyle.PayPerSession,
 ) {
     fun isValid(): Boolean {
         return frequency != null &&
-                selectedPaymentMethod != null &&
+                selectedPaymentStyle != null &&
                 sessionCount > 0 &&
                 !isLoading
     }

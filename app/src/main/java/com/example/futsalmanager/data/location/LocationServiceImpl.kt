@@ -1,13 +1,15 @@
 package com.example.futsalmanager.data.location
 
-import android.annotation.SuppressLint
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Looper
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import com.example.futsalmanager.domain.model.LocationModel
 import com.example.futsalmanager.domain.repository.LocationRepository
@@ -17,14 +19,11 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -69,7 +68,6 @@ class LocationServiceImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    @SuppressLint("MissingPermission")
     override fun getLiveLocation(): Flow<LocationModel> = callbackFlow {
 
         val callback = object : LocationCallback() {
@@ -86,11 +84,19 @@ class LocationServiceImpl @Inject constructor(
             .setMinUpdateIntervalMillis(2000L)
             .build()
 
-        client.requestLocationUpdates(request, callback, Looper.getMainLooper())
-            .addOnFailureListener { e ->
-                close(e)
-            }
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
+        if (hasPermission) {
+            client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+                .addOnFailureListener { e ->
+                    close(e)
+                }
+        } else {
+            close()
+        }
         awaitClose {
             client.removeLocationUpdates(callback)
         }

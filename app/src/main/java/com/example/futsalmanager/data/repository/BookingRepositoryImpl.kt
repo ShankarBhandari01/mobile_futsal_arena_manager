@@ -3,6 +3,9 @@ package com.example.futsalmanager.data.repository
 import com.example.futsalmanager.data.local.room.dao.ArenaDao
 import com.example.futsalmanager.data.remote.api.BookingApi
 import com.example.futsalmanager.data.remote.dto.CourtDto
+import com.example.futsalmanager.data.remote.dto.PaymentIntentResponseDTO
+import com.example.futsalmanager.data.remote.dto.ReservationRequestDTO
+import com.example.futsalmanager.data.remote.dto.ReservationResponseDTO
 import com.example.futsalmanager.domain.model.ArenaWithCourts
 import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.domain.model.Courts

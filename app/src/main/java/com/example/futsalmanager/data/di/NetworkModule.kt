@@ -4,9 +4,11 @@ import android.content.Context
 import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.remote.api.BookingApi
 import com.example.futsalmanager.data.remote.api.HomeApi
+import com.example.futsalmanager.data.remote.api.PaymentApi
 import com.example.futsalmanager.data.remote.api.impl.AuthApiImpl
 import com.example.futsalmanager.data.remote.api.impl.BookingApiImpl
 import com.example.futsalmanager.data.remote.api.impl.HomeApiImpl
+import com.example.futsalmanager.data.remote.api.impl.PaymentApiImpl
 import com.example.futsalmanager.data.remote.client.HttpClientFactory
 import com.example.futsalmanager.domain.session.SessionStorage
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -55,4 +57,7 @@ abstract class NetworkModule {
     @Singleton
     abstract fun bindBookingApi(impl: BookingApiImpl): BookingApi
 
+    @Binds
+    @Singleton
+    abstract fun bindPaymentApi(impl: PaymentApiImpl): PaymentApi
 }

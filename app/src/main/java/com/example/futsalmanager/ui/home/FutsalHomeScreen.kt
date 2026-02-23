@@ -1,7 +1,6 @@
 package com.example.futsalmanager.ui.home
 
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.expandVertically
@@ -28,6 +27,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.GridView
@@ -86,6 +86,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.domain.model.Arenas
@@ -101,7 +102,6 @@ import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
 import com.example.futsalmanager.ui.home.navigation_drawer.FutsalDrawerSheet
 import com.example.futsalmanager.ui.home.viewModels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.material.loadingindicator.LoadingIndicator
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -474,6 +474,7 @@ fun FutsalHomeScreen(
                         state.viewMode == ViewMode.MAP -> {
                             item(key = "map_view") {
                                 ArenaMapView(
+                                    onIntent,
                                     arenas = state.arenaList ?: emptyList(),
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -540,6 +541,7 @@ fun LazyListScope.arenasListSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArenaMapView(
+    onIntent: (HomeIntent) -> Unit,
     arenas: List<Arenas>,
     modifier: Modifier = Modifier
 ) {
@@ -676,7 +678,11 @@ fun ArenaMapView(
             ) {
                 ArenaDetailSheet(
                     arena = selectedArena!!,
-                    userLocation = locationOverlay?.myLocation
+                    userLocation = locationOverlay?.myLocation,
+                    onBookClick = {
+                        onIntent(HomeIntent.ArenaClicked(selectedArena!!))
+                        showSheet = false
+                    }
                 )
             }
         }
@@ -740,7 +746,8 @@ private fun updateMarkers(
 @Composable
 fun ArenaDetailSheet(
     arena: Arenas,
-    userLocation: GeoPoint?
+    userLocation: GeoPoint?,
+    onBookClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -777,7 +784,7 @@ fun ArenaDetailSheet(
         Button(
             onClick = {
                 val uri =
-                    Uri.parse("google.navigation:q=${arena.latitude},${arena.longitude}")
+                    "google.navigation:q=${arena.latitude},${arena.longitude}".toUri()
                 context.startActivity(Intent(Intent.ACTION_VIEW, uri))
             },
             modifier = Modifier.fillMaxWidth()
@@ -786,7 +793,17 @@ fun ArenaDetailSheet(
             Spacer(Modifier.width(8.dp))
             Text("Get Directions")
         }
-
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = {
+                onBookClick()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("View & Book Courts")
+            Spacer(Modifier.width(8.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
+        }
         Spacer(Modifier.height(32.dp))
     }
 }

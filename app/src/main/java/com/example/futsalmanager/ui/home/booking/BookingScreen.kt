@@ -1,6 +1,7 @@
 package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -80,6 +81,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.futsalmanager.R
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
@@ -92,6 +94,8 @@ import com.example.futsalmanager.domain.model.TimeSegment
 import com.example.futsalmanager.ui.component.BookingHeading
 import com.example.futsalmanager.ui.home.booking.recurringBooking.RecurringBookingSheetContent
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
+import com.stripe.android.paymentsheet.PaymentSheetResult
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -787,7 +791,7 @@ fun TimeSlotCard(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(if (isUnavailable) 0.38f else 1f),
-        shape = RoundedCornerShape(22.dp),
+        shape = MaterialTheme.shapes.medium,
         color = containerColor,
         border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
         tonalElevation = if (isAvailable && !isSelected) 2.dp else 0.dp
@@ -800,7 +804,7 @@ fun TimeSlotCard(
                 Surface(
                     color = if (isBooked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     contentColor = if (isBooked) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(bottomStart = 14.dp, topEnd = 22.dp),
+                    shape = MaterialTheme.shapes.small,
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(
@@ -821,13 +825,13 @@ fun TimeSlotCard(
                 Column {
                     Text(
                         text = slot.start.toDisplayTime(),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = contentColor
                     )
                     Text(
                         text = "to ${slot.end.toDisplayTime()}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = secondaryTextColor
                     )
                 }
@@ -841,7 +845,7 @@ fun TimeSlotCard(
                 } else {
                     Text(
                         text = "Rs ${slot.price}",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black,
                         color = contentColor
                     )
@@ -902,6 +906,7 @@ fun PaymentSection(
     val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     val accentColor = MaterialTheme.colorScheme.primary
 
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -913,7 +918,8 @@ fun PaymentSection(
         BookingHeading(
             "Payment Method",
             modifier = Modifier
-                .fillMaxWidth().padding(16.dp),
+                .fillMaxWidth()
+                .padding(16.dp),
             step = 3,
             stepCount = 3
         )
@@ -978,7 +984,13 @@ fun PaymentSection(
         }
 
         Button(
-            onClick = { onPaymentButtonClick},
+            onClick = {
+                if (selectedMethod == PaymentMethod.ONLINE) {
+
+                } else {
+                    onPaymentButtonClick()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

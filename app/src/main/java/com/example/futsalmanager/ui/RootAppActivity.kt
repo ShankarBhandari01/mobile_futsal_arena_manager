@@ -166,7 +166,6 @@ fun AppRoot() {
                         },
                         arenaClicked = { arenaId ->
                             Log.d("arenaId", arenaId)
-
                             navController.navigate(Routes.bookingScreen(arenaId))
                         }
                     )

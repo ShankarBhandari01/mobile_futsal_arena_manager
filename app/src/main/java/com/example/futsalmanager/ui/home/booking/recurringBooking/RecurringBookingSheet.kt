@@ -33,18 +33,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventRepeat
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Weekend
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +66,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -82,9 +87,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.core.utils.Common
 import com.example.futsalmanager.domain.model.Courts
 import com.example.futsalmanager.domain.model.Frequency
-import com.example.futsalmanager.domain.model.PaymentMethod
+import com.example.futsalmanager.domain.model.PaymentStyle
 import com.example.futsalmanager.ui.home.viewModels.RecurringBookingViewModel
-import com.example.futsalmanager.ui.theme.BrandGreen
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -286,17 +290,117 @@ fun StepThreeReview(
         )
 
         // Dynamically generating payment options from an enum/list
-        PaymentMethod.entries.forEachIndexed { index, method ->
+        PaymentStyle.entries.forEachIndexed { index, method ->
             val (title, sub, icon) = paymentOptions[index]
             SelectableOptionCard(
                 title = title,
                 subtitle = sub,
                 icon = icon,
-                isSelected = state.selectedPaymentMethod == method,
+                isSelected = state.selectedPaymentStyle == method,
                 onClick = { onIntent(RecurringBookingIntent.UpdatePaymentMethod(method)) }
             )
         }
+        // --- Card selection for Auto-Payment ---
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            elevation = CardDefaults.cardElevation(2.dp)
+        )
+        {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
+                // Header Row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CreditCard,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Select Card for Auto-Payment",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Inner Empty State Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    elevation = CardDefaults.cardElevation(0.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        Icon(
+                            modifier = Modifier.size(40.dp),
+                            imageVector = Icons.Default.CreditCard,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Text(
+                            text = "No saved cards yet",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Card"
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Add Card")
+                        }
+                    }
+                }
+
+                // Info Row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "A saved card is required for automatic payments",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        // --- Booking Summary
+        BookingSummaryCard(
+            state = state
+        )
         // --- Footer Navigation ---
         Spacer(Modifier.weight(1f)) // Push buttons to bottom
         StepNavigationButtons(
@@ -677,18 +781,18 @@ fun RecurringBookingSheetContentPreview() {
           onNext = {}, onBack = {}
       )*/
 
-    RecurringBookingSheetContent(
-        courts = emptyList(),
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        onDismiss = {}
-    )
+    /*    RecurringBookingSheetContent(
+            courts = emptyList(),
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            onDismiss = {}
+        )*/
 
-    /* StepThreeReview(
-         onConfirm = {},
-         onBack = {},
-         state = RecurringBookingState(),
-         onIntent = {}
-     )*/
+    StepThreeReview(
+        onConfirm = {},
+        onBack = {},
+        state = RecurringBookingState(),
+        onIntent = {}
+    )
 }
 
 @Composable
@@ -737,5 +841,125 @@ fun StepNavigationButtons(
                 color = if (nextButtonEnabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+fun BookingSummaryCard(
+    state: RecurringBookingState,
+) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a") }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+
+                Text(
+                    text = "Booking Summary",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            val scheduleTime = state.selectedTime?.format(timeFormatter)
+            val selectedDay =
+                state.selectedDay?.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            val estTotal = state.sessionCount * state.selectedCourt!!.basePrice.toDouble()
+
+            // Details
+            SummaryRow("Court", state.selectedCourt.name)
+            SummaryRow("Schedule", "$selectedDay @ $scheduleTime")
+            SummaryRow("Frequency", state.frequency?.displayName!!)
+            SummaryRow("Payment", state.selectedPaymentStyle?.displayName!!)
+            SummaryRow("Total Sessions", state.sessionCount.toString())
+
+            HorizontalDivider(
+                Modifier,
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Estimated Total
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Est. Total",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Text(
+                    text = "$${String.format("%.2f", estTotal)}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Info Note
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+
+                Text(
+                    text = "Price may vary based on peak hours and special rates. You'll be charged per session.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SummaryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

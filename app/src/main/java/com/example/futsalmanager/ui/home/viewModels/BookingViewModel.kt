@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.core.utils.Common.toDisplayDate
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
 import com.example.futsalmanager.domain.usecase.BookingUseCase
+import com.example.futsalmanager.domain.usecase.PaymentUseCase
 import com.example.futsalmanager.ui.home.booking.BookingEffect
 import com.example.futsalmanager.ui.home.booking.BookingIntent
 import com.example.futsalmanager.ui.home.booking.BookingState
@@ -23,6 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookingViewModel @Inject constructor(
+    private val paymentUseCase: PaymentUseCase,
     private val useCase: BookingUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -144,10 +146,6 @@ class BookingViewModel @Inject constructor(
 
             is BookingIntent.SelectDate -> {
                 _state.update { it.copy(selectedDate = intent.date) }
-            }
-
-            is BookingIntent.SetupRecurring -> {
-
             }
 
             is BookingIntent.MakePayment -> {
