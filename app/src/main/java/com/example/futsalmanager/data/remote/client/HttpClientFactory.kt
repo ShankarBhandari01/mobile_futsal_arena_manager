@@ -2,6 +2,9 @@ package com.example.futsalmanager.data.remote.client
 
 import com.example.futsalmanager.core.utils.AuthHeaderPlugin
 import com.example.futsalmanager.core.utils.NetworkConfig
+import com.example.futsalmanager.core.utils.TokenRefreshPlugin
+import com.example.futsalmanager.data.remote.api.AuthApi
+import com.example.futsalmanager.domain.session.SessionStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
@@ -16,7 +19,12 @@ import kotlinx.serialization.json.Json
 
 object HttpClientFactory {
 
-    fun create(tokenProvider: () -> String?): HttpClient {
+    fun create(
+        tokenProvider: () -> String?,
+        sessionStorage: SessionStorage,
+        getAuthApi: () -> AuthApi,
+        onLogout: () -> Unit,
+    ): HttpClient {
 
         return HttpClient(OkHttp) {
 
@@ -52,7 +60,11 @@ object HttpClientFactory {
             install(AuthHeaderPlugin) {
                 this.tokenProvider = tokenProvider
             }
-
+            install(TokenRefreshPlugin) {
+                this.sessionStorage = sessionStorage
+                this.getAuthApi = getAuthApi
+                this.onLogout = onLogout
+            }
         }
     }
 }

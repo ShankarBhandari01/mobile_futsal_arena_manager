@@ -62,6 +62,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -88,6 +89,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.ui.component.ArenaCard
@@ -119,13 +121,23 @@ fun FutsalHomeScreenRoute(
     onLogout: () -> Unit,
     arenaClicked: (String) -> Unit
 ) {
-
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewmodel = hiltViewModel<HomeViewModel>()
     val context = LocalContext.current
-    val state by viewmodel.state.collectAsStateWithLifecycle()
 
+    val state by viewmodel.state.collectAsStateWithLifecycle(
+        lifecycleOwner = lifecycleOwner
+    )
 
-    LaunchedEffect(viewmodel.effect) {
+    DisposableEffect(Unit) {
+        viewmodel.dispatch(HomeIntent.ScreenStarted)
+        onDispose {
+            viewmodel.dispatch(HomeIntent.ScreenStopped)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+
         viewmodel.effect.collect { e ->
             when (e) {
                 is HomeEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
@@ -156,7 +168,9 @@ fun FutsalHomeScreenRoute(
                 }
             }
         }
+
     }
+
 
     HomePermissionWrapper(
         onPermissionChanged = { isGranted ->

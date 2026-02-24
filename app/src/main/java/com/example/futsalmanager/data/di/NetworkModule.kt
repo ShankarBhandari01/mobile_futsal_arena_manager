@@ -1,6 +1,7 @@
 package com.example.futsalmanager.data.di
 
 import android.content.Context
+import com.example.futsalmanager.core.utils.LogoutEventBus
 import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.remote.api.BookingApi
 import com.example.futsalmanager.data.remote.api.HomeApi
@@ -28,11 +29,24 @@ import javax.inject.Singleton
 abstract class NetworkModule {
 
     companion object {
+        var authApi: AuthApi? = null
+
         @Provides
         @Singleton
         fun provideHttpClient(sessionStorage: SessionStorage): HttpClient {
-            return HttpClientFactory.create {
-                runBlocking { sessionStorage.getAccessToken() }
+            return HttpClientFactory.create(
+                tokenProvider = {
+                    runBlocking {
+                        sessionStorage.getAccessToken()
+                    }
+                },
+                sessionStorage = sessionStorage,
+                getAuthApi = {
+                    requireNotNull(authApi) { "AuthApi not initialized before token refresh" }
+                },
+                onLogout = { LogoutEventBus.triggerLogout() }
+            ).also {
+                authApi = AuthApiImpl(it)
             }
         }
 

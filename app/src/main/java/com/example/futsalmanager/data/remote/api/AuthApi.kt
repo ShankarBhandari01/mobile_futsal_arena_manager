@@ -10,7 +10,7 @@ interface AuthApi {
     suspend fun register(registerRequest: RegisterRequest): Result<RegisterResponse>
     suspend fun verifyEmail(email: String,otp:String): Result<Unit>
     suspend fun login(email: String, password: String): Result<LoginResponse>
-    suspend fun refresh(): Result<LoginResponse>
+    suspend fun refresh(refreshToken: String): Result<LoginResponse>
     suspend fun logout(): Result<Unit>
     suspend fun forgotPassword(email: String): Result<ResetCodeResponse>
     suspend fun resetPassword(changePasswordRequest: ChangePasswordRequest): Result<Unit>

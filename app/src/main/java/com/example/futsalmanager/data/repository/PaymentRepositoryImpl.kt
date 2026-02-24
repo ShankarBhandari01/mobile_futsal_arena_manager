@@ -12,8 +12,8 @@ import javax.inject.Singleton
 class PaymentRepositoryImpl @Inject constructor(
     private val api: PaymentApi
 ) : PaymentRepository {
-    override suspend fun createPayment(userId: String): Result<PaymentIntentResponseDTO> {
-        return api.createPayment(userId)
+    override suspend fun createPayment(bookingId: String): Result<PaymentIntentResponseDTO> {
+        return api.createPayment(bookingId)
     }
 
     override suspend fun reserve(request: ReservationRequestDTO): Result<ReservationResponseDTO> {

@@ -83,11 +83,12 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.core.utils.Common
 import com.example.futsalmanager.domain.model.Courts
-import com.example.futsalmanager.domain.model.Frequency
-import com.example.futsalmanager.domain.model.PaymentStyle
+import com.example.futsalmanager.domain.model.emum.Frequency
+import com.example.futsalmanager.domain.model.emum.PaymentStyle
 import com.example.futsalmanager.ui.home.viewModels.RecurringBookingViewModel
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
@@ -101,6 +102,7 @@ fun RecurringBookingSheetContent(
     courts: List<Courts?>,
     onDismiss: () -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     // viewmodel
     val viewModel = hiltViewModel<RecurringBookingViewModel>()
     // state

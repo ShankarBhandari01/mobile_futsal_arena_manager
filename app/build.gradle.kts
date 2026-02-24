@@ -52,7 +52,8 @@ android {
 }
 
 dependencies {
-
+    // Stops slf4j from scanning classpath on first use — fixes the  ANR
+    implementation("org.slf4j:slf4j-nop:2.0.13")
     implementation("com.stripe:stripe-android:22.8.1")
 
     implementation(libs.material)

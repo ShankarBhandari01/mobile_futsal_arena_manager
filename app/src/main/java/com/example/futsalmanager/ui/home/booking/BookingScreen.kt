@@ -1,7 +1,7 @@
 package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
-import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -72,6 +72,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,20 +81,23 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.AsyncImage
 import com.example.futsalmanager.R
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
 import com.example.futsalmanager.core.utils.Common.toHourInt
 import com.example.futsalmanager.domain.model.Courts
-import com.example.futsalmanager.domain.model.PaymentMethod
 import com.example.futsalmanager.domain.model.Slot
-import com.example.futsalmanager.domain.model.SlotStatus
-import com.example.futsalmanager.domain.model.TimeSegment
+import com.example.futsalmanager.domain.model.emum.PaymentMethod
+import com.example.futsalmanager.domain.model.emum.SlotStatus
+import com.example.futsalmanager.domain.model.emum.TimeSegment
 import com.example.futsalmanager.ui.component.BookingHeading
 import com.example.futsalmanager.ui.home.booking.recurringBooking.RecurringBookingSheetContent
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
+import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.stripe.android.paymentsheet.rememberPaymentSheet
 import kotlinx.coroutines.launch
@@ -107,9 +111,56 @@ fun BookingScreenRoute(
     snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<BookingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val activity = context as ComponentActivity
 
+    val paymentResultCallback = { result: PaymentSheetResult ->
+        when (result) {
+            is PaymentSheetResult.Completed -> {
+                // Tell the ViewModel to verify the booking on the backend
+
+            }
+
+            is PaymentSheetResult.Canceled -> {
+                // Log cancellation or just stop the loading state
+
+            }
+
+            is PaymentSheetResult.Failed -> {
+                // Push an effect to show the error
+
+            }
+        }
+    }
+
+    val paymentSheet = rememberPaymentSheet(paymentResultCallback)
+
+    LaunchedEffect(Unit) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is BookingEffect.ShowError -> {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
+
+                    is BookingEffect.ShowPaymentDialog -> {
+                        val payment = effect.paymentIntent
+                        paymentSheet.presentWithPaymentIntent(
+                            paymentIntentClientSecret = payment.paymentIntentResponseDTO.clientSecret,
+                            configuration = PaymentSheet.Configuration(
+                                merchantDisplayName = state.arena?.name ?: "Arena",
+                                allowsDelayedPaymentMethods = true
+                            )
+                        )
+
+                    }
+                }
+            }
+        }
+    }
 
     ArenaBookingScreen(
         state = state,
@@ -156,6 +207,8 @@ fun ArenaBookingScreen(
                 }
             }
     }
+
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -584,7 +637,8 @@ fun DateItem(
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
-    val dayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).uppercase()
+    val dayName =
+        date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).uppercase()
     val dayNumber = date.dayOfMonth.toString()
 
     val containerColor =
@@ -985,11 +1039,9 @@ fun PaymentSection(
 
         Button(
             onClick = {
-                if (selectedMethod == PaymentMethod.ONLINE) {
 
-                } else {
                     onPaymentButtonClick()
-                }
+
             },
             modifier = Modifier
                 .fillMaxWidth()

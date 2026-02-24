@@ -43,6 +43,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.OtpInputField
@@ -218,17 +221,21 @@ fun EmailVerificationScreenRoute(
     onBack: () -> Unit,
     onSubmitted: () -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<EmailVerificationViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { e ->
-            when (e) {
-                EmailVerificationEffect.OnBackClicked -> onBack()
-                EmailVerificationEffect.Navigate -> onSubmitted()
-                is EmailVerificationEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.effect.collect { e ->
+                when (e) {
+                    EmailVerificationEffect.OnBackClicked -> onBack()
+                    EmailVerificationEffect.Navigate -> onSubmitted()
+                    is EmailVerificationEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+                }
             }
         }
+
     }
 
     EmailVerificationScreen(

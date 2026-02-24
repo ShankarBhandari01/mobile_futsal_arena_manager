@@ -1,5 +1,6 @@
 package com.example.futsalmanager.domain.model
 
+import com.example.futsalmanager.domain.model.emum.SlotStatus
 import kotlinx.serialization.Serializable
 
 @Serializable

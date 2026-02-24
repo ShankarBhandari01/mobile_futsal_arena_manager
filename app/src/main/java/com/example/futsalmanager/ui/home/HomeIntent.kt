@@ -1,6 +1,7 @@
 package com.example.futsalmanager.ui.home
 
 import com.example.futsalmanager.domain.model.Arenas
+import com.example.futsalmanager.domain.model.LocationModel
 
 sealed interface HomeIntent {
     data class ArenaClicked(val arena: Arenas) : HomeIntent
@@ -18,5 +19,11 @@ sealed interface HomeIntent {
     object LoadNextPage : HomeIntent
 
     object OnPermissionsGranted : HomeIntent
+
+    object ScreenStarted : HomeIntent
+    object ScreenStopped : HomeIntent
+
+
+
 
 }

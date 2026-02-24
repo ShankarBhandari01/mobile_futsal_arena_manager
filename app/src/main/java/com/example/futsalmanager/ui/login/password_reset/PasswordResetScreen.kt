@@ -44,7 +44,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.OtpInputField
 import com.example.futsalmanager.ui.login.viewmodels.OtpPasswordResetViewModel
@@ -256,20 +259,23 @@ fun PasswordResetScreenRoute(
     onBack: () -> Unit,
     onSubmitted: () -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<OtpPasswordResetViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.effect.collect { effect ->
 
-            when (effect) {
-                OtpPasswordResetEffect.OnBackClicked -> onBack()
-                OtpPasswordResetEffect.Navigate -> onSubmitted()
-                is OtpPasswordResetEffect.ShowError -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                when (effect) {
+                    OtpPasswordResetEffect.OnBackClicked -> onBack()
+                    OtpPasswordResetEffect.Navigate -> onSubmitted()
+                    is OtpPasswordResetEffect.ShowError -> {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
                 }
-            }
 
+            }
         }
     }
 

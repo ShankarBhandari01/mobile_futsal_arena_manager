@@ -1,4 +1,4 @@
-package com.example.futsalmanager.domain.model
+package com.example.futsalmanager.domain.model.emum
 
 enum class Frequency(val displayName: String) {
     WEEKLY("Weekly"),

@@ -30,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -45,7 +44,10 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.futsalmanager.ui.component.LoadingButton
 import com.example.futsalmanager.ui.component.TextLabel
 import com.example.futsalmanager.ui.login.viewmodels.ForgetPasswordViewModel
@@ -193,20 +195,23 @@ fun ForgotPasswordScreenRoute(
     onBack: () -> Unit,
     onSubmitted: (email: String) -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<ForgetPasswordViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is ForgetPasswordEffect.OnBackClicked -> onBack()
-                is ForgetPasswordEffect.NavigateToOtp -> {
-                    snackbarHostState.showSnackbar(effect.message)
-                    onSubmitted(effect.email)
-                }
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is ForgetPasswordEffect.OnBackClicked -> onBack()
+                    is ForgetPasswordEffect.NavigateToOtp -> {
+                        snackbarHostState.showSnackbar(effect.message)
+                        onSubmitted(effect.email)
+                    }
 
-                is ForgetPasswordEffect.ShowError ->
-                    snackbarHostState.showSnackbar(effect.message)
+                    is ForgetPasswordEffect.ShowError ->
+                        snackbarHostState.showSnackbar(effect.message)
+                }
             }
         }
     }

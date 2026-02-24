@@ -9,6 +9,7 @@ import com.example.futsalmanager.data.remote.safe.safeApiCall
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.path
 import javax.inject.Inject
 
@@ -16,12 +17,12 @@ class PaymentApiImpl @Inject constructor(
     private val client: HttpClient
 ) : PaymentApi {
 
-    override suspend fun createPayment(userId: String): Result<PaymentIntentResponseDTO> {
+    override suspend fun createPayment(bookingId: String): Result<PaymentIntentResponseDTO> {
         return safeApiCall {
             client.post(ApiRegistry.CREATE_PAYMENT) {
                 url {
                     path(
-                        userId,
+                        bookingId,
                         ApiRegistry.CREATE_PAYMENT
                     )
                 }
@@ -38,6 +39,7 @@ class PaymentApiImpl @Inject constructor(
                         ApiRegistry.RESERVE
                     )
                 }
+                setBody(request)
             }.body<ReservationResponseDTO>()
         }
     }

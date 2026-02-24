@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Looper
+import android.os.HandlerThread
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
@@ -19,11 +19,9 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,19 +54,25 @@ class LocationServiceImpl @Inject constructor(
             }
         }
 
-        context.registerReceiver(
-            receiver,
-            IntentFilter(
-                LocationManager.PROVIDERS_CHANGED_ACTION
-            )
-        )
+        context.registerReceiver(receiver, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
 
-        awaitClose {
-            context.unregisterReceiver(receiver)
-        }
-    }.flowOn(Dispatchers.IO)
+        awaitClose { context.unregisterReceiver(receiver) }
+    }
 
     override fun getLiveLocation(): Flow<LocationModel> = callbackFlow {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context, ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            close()
+            return@callbackFlow
+        }
+
+        val handlerThread = HandlerThread("LocationCallbackThread").also {
+            it.start()
+        }
+
 
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
@@ -80,25 +84,16 @@ class LocationServiceImpl @Inject constructor(
             }
         }
 
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
-            .setMinUpdateIntervalMillis(2000L)
-            .build()
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10_000L)
+            .setMinUpdateIntervalMillis(10_000L).setMinUpdateDistanceMeters(50f).build()
 
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        client.requestLocationUpdates(request, callback, handlerThread.looper)
+            .addOnFailureListener { e -> close(e) }
 
-        if (hasPermission) {
-            client.requestLocationUpdates(request, callback, Looper.getMainLooper())
-                .addOnFailureListener { e ->
-                    close(e)
-                }
-        } else {
-            close()
-        }
         awaitClose {
             client.removeLocationUpdates(callback)
+            handlerThread.quitSafely()
         }
-    }.flowOn(Dispatchers.IO)
+    }
+
 }

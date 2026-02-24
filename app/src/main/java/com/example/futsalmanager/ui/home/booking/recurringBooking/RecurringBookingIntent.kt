@@ -1,9 +1,9 @@
 package com.example.futsalmanager.ui.home.booking.recurringBooking
 
 import com.example.futsalmanager.domain.model.Courts
-import com.example.futsalmanager.domain.model.Frequency
-import com.example.futsalmanager.domain.model.PaymentMethod
-import com.example.futsalmanager.domain.model.PaymentStyle
+import com.example.futsalmanager.domain.model.emum.Frequency
+import com.example.futsalmanager.domain.model.emum.PaymentMethod
+import com.example.futsalmanager.domain.model.emum.PaymentStyle
 import com.example.futsalmanager.domain.model.Slot
 import java.time.DayOfWeek
 import java.time.LocalTime

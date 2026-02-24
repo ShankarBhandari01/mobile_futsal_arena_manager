@@ -29,19 +29,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val useCase: HomeUseCase,
 ) : ViewModel() {
-
+    private val _isScreenActive = MutableStateFlow(false)
     private val _state = MutableStateFlow(HomeState())
 
-    // single source of truth DB
     val state: StateFlow<HomeState> = combine(_state, useCase.arenas) { currentState, arenaList ->
-        currentState.copy(
-            arenaList = arenaList, isLoading = false
-        )
+        currentState.copy(arenaList = arenaList)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -52,31 +50,28 @@ class HomeViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-
-        combine(
-            useCase.observerLocationStatus,
-            _state.map {
-                it.isPermissionGranted
-            }.distinctUntilChanged()
-
-        ) { isEnabled, isGranted ->
-            Pair(isEnabled, isGranted)
-        }
-            .flatMapLatest { (isEnabled, isGranted) ->
-                _state.update { it.copy(isLocationEnabled = isEnabled) }
-
-                if (isEnabled && isGranted) {
-                    useCase.userLocation.distinctUntilChanged()
-                } else {
-                   flowOf(null)
-                }
-            }
-            .onEach { loc ->
-                _state.update { it.copy(location = loc) }
-            }
-            .launchIn(viewModelScope)
-
+        observeLocationState()
         observeSearchAndFilters()
+    }
+
+    private fun observeLocationState() {
+        _isScreenActive
+            .flatMapLatest { active ->
+                if (!active) return@flatMapLatest flowOf(state.value.location)
+                combine(
+                    useCase.observerLocationStatus,
+                    _state.map { it.isPermissionGranted }.distinctUntilChanged()
+                ) { isEnabled, isGranted -> isEnabled to isGranted }
+                    .onEach { (isEnabled, _) ->
+                        _state.update { it.copy(isLocationEnabled = isEnabled) }
+                    }
+                    .flatMapLatest { (isEnabled, isGranted) ->
+                        if (isEnabled && isGranted) useCase.userLocation
+                        else flowOf(null)
+                    }
+            }
+            .onEach { loc -> _state.update { it.copy(location = loc) } }
+            .launchIn(viewModelScope)
     }
 
     @OptIn(FlowPreview::class)
@@ -88,44 +83,34 @@ class HomeViewModel @Inject constructor(
                 location = it.location,
                 isEnabled = it.isLocationEnabled
             )
-        }.distinctUntilChanged().debounce(500).onEach { params ->
-            loadArenaList(
-                query = params.query,
-                date = params.date,
-                location = params.location,
-                isLocationEnabled = params.isEnabled
-            )
-        }.launchIn(viewModelScope)
+        }
+            .distinctUntilChanged()
+            .debounce(500)
+            .onEach { params ->
+                loadArenaList(
+                    query = params.query,
+                    date = params.date,
+                    location = params.location,
+                    isLocationEnabled = params.isEnabled
+                )
+            }
+            .launchIn(viewModelScope)
     }
 
     fun dispatch(intent: HomeIntent) {
         when (intent) {
+            is HomeIntent.ScreenStarted -> _isScreenActive.value = true
+            is HomeIntent.ScreenStopped -> _isScreenActive.value = false
+            is HomeIntent.LoadNextPage -> loadNextPage()
 
-            is HomeIntent.LoadNextPage -> {
-                val currentState = _state.value
-                val nextOffset = currentState.offset + currentState.limit
-                _state.update { it.copy(offset = nextOffset) }
-
-                viewModelScope.launch {
-                    loadArenaList(
-                        query = currentState.search,
-                        date = currentState.date,
-                        location = currentState.location
-                    )
-                }
-            }
-
-            is HomeIntent.ViewModeChanged -> {
+            is HomeIntent.ViewModeChanged ->
                 _state.update { it.copy(viewMode = intent.viewMode) }
-            }
 
-            is HomeIntent.SearchChanged -> {
+            is HomeIntent.SearchChanged ->
                 _state.update { it.copy(search = intent.query, offset = 0) }
-            }
 
-            is HomeIntent.DateChanged -> {
+            is HomeIntent.DateChanged ->
                 _state.update { it.copy(date = intent.date, offset = 0) }
-            }
 
             is HomeIntent.Refresh -> viewModelScope.launch {
                 _state.update { it.copy(offset = 0) }
@@ -137,25 +122,38 @@ class HomeViewModel @Inject constructor(
                 _effect.send(HomeEffect.NavigateToLocationSettings)
             }
 
-            is HomeIntent.LogoutClicked -> _state.update { it.copy(showLogoutDialog = true) }
-            is HomeIntent.DismissLogoutDialog -> _state.update {
-                it.copy(showLogoutDialog = false)
-            }
+            is HomeIntent.LogoutClicked ->
+                _state.update { it.copy(showLogoutDialog = true) }
+
+            is HomeIntent.DismissLogoutDialog ->
+                _state.update { it.copy(showLogoutDialog = false) }
 
             is HomeIntent.ArenaClicked -> viewModelScope.launch {
                 _effect.send(HomeEffect.NavigateToBookingWithArea(intent.arena))
             }
 
             is HomeIntent.OnPermissionsGranted ->
-                _state.update {
-                    it.copy(isPermissionGranted = true)
-                }
+                _state.update { it.copy(isPermissionGranted = true) }
 
-            // Group navigation intents together
-            HomeIntent.MarketPlaceClicked, HomeIntent.MyBookingClicked, HomeIntent.MyProfileClicked, HomeIntent.ConfirmLogout -> handleNavigation(
-                intent
+            HomeIntent.MarketPlaceClicked,
+            HomeIntent.MyBookingClicked,
+            HomeIntent.MyProfileClicked,
+            HomeIntent.ConfirmLogout -> handleNavigation(intent)
+        }
+    }
+
+    private fun loadNextPage() {
+        val currentState = _state.value
+        val nextOffset = currentState.offset + currentState.limit
+        _state.update { it.copy(offset = nextOffset) }
+
+        viewModelScope.launch {
+            loadArenaList(
+                query = currentState.search,
+                date = currentState.date,
+                location = currentState.location,
+                isLocationEnabled = currentState.isLocationEnabled
             )
-
         }
     }
 
@@ -171,17 +169,14 @@ class HomeViewModel @Inject constructor(
 
             else -> null
         }
-        effect?.let {
-            _effect.send(it)
-        }
+        effect?.let { _effect.send(it) }
     }
 
     private suspend fun loadArenaList(
         query: String,
         date: String,
         location: LocationModel?,
-        isLocationEnabled: Boolean = false
-
+        isLocationEnabled: Boolean = false,
     ) {
         _state.update { it.copy(isLoading = true) }
         try {
@@ -201,7 +196,5 @@ class HomeViewModel @Inject constructor(
         } finally {
             _state.update { it.copy(isLoading = false) }
         }
-
     }
-
 }

@@ -1,28 +1,40 @@
 package com.example.futsalmanager.domain.usecase
 
+import com.example.futsalmanager.core.utils.ApplicationScope
 import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.model.LocationModel
-import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.repository.HomeRepository
 import com.example.futsalmanager.domain.repository.LocationRepository
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class HomeUseCase @Inject constructor(
     private val repo: HomeRepository,
-    private val location: LocationRepository
+    private val location: LocationRepository,
+    @ApplicationScope private val appScope: CoroutineScope,
 ) {
-    val userLocation = location.getLiveLocation()
+    val arenas = repo.getArenaListFromDB()
 
-    suspend fun isLocationEnable() = location.checkLocationStatus()
+    val userLocation = location.getLiveLocation().stateIn(
+        scope = appScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
-    suspend fun isGpsEnable() = location.checkGpsStatus()
+    val observerLocationStatus = location.observeLocationStatus().stateIn(
+        scope = appScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
-    val observerLocationStatus = location.observeLocationStatus()
+    suspend fun isLocationEnabled() = location.checkLocationStatus()
+
+    suspend fun isGpsEnabled() = location.checkGpsStatus()
 
     suspend fun getArenaListFromApi(
         search: String,
@@ -32,17 +44,14 @@ class HomeUseCase @Inject constructor(
         location: LocationModel? = null,
         isGpsEnabled: Boolean,
     ): Result<ArenaListResponse> {
-
         val sanitizedSearch = search.trim()
 
-        // Don't call API if search is just 1 character
         if (sanitizedSearch.isNotEmpty() && sanitizedSearch.length < 2) {
             return Result.success(ArenaListResponse())
         }
-        // If DatePicker gives "Feb 05, 2026", convert it to "2026-02-05"
+
         val formattedDate = date?.let { formatDateForApi(it) } ?: ""
 
-        // check if we have valid user location
         val shouldSortByDistance = isGpsEnabled &&
                 location?.latitude != 0.0 &&
                 location?.longitude != 0.0
@@ -56,7 +65,4 @@ class HomeUseCase @Inject constructor(
             lng = if (shouldSortByDistance) location?.longitude else null,
         )
     }
-    // home areana load
-    val arenas = repo.getArenaListFromDB()
-
 }

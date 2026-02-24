@@ -1,5 +1,6 @@
 package com.example.futsalmanager.data.remote.api.impl
 
+import com.example.futsalmanager.core.utils.TokenRefreshPlugin
 import com.example.futsalmanager.data.remote.api.ApiRegistry
 import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
@@ -11,6 +12,7 @@ import com.example.futsalmanager.data.remote.dto.ResetCodeResponse
 import com.example.futsalmanager.data.remote.safe.safeApiCall
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.serialization.json.buildJsonObject
@@ -46,8 +48,13 @@ class AuthApiImpl @Inject constructor(
         }
     }
 
-    override suspend fun refresh(): Result<LoginResponse> {
-        TODO("Not yet implemented")
+    override suspend fun refresh(refreshToken: String): Result<LoginResponse> {
+        return safeApiCall {
+            client.post(ApiRegistry.REFRESH) {
+                header("Authorization", "Bearer $refreshToken")
+                attributes.put(TokenRefreshPlugin.IS_REFRESH_REQUEST, true)
+            }.body<LoginResponse>()
+        }
     }
 
     override suspend fun forgotPassword(email: String): Result<ResetCodeResponse> {

@@ -3,10 +3,12 @@ package com.example.futsalmanager.ui.home.viewModels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.futsalmanager.core.utils.Common
 import com.example.futsalmanager.core.utils.Common.toDisplayDate
 import com.example.futsalmanager.core.utils.Common.toDisplayTime
+import com.example.futsalmanager.data.remote.dto.ReservationRequestDTO
+import com.example.futsalmanager.domain.model.emum.PaymentMethod
 import com.example.futsalmanager.domain.usecase.BookingUseCase
-import com.example.futsalmanager.domain.usecase.PaymentUseCase
 import com.example.futsalmanager.ui.home.booking.BookingEffect
 import com.example.futsalmanager.ui.home.booking.BookingIntent
 import com.example.futsalmanager.ui.home.booking.BookingState
@@ -24,7 +26,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookingViewModel @Inject constructor(
-    private val paymentUseCase: PaymentUseCase,
     private val useCase: BookingUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -132,10 +133,6 @@ class BookingViewModel @Inject constructor(
                 _state.update { it.copy(selectedSlot = intent.slot) }
             }
 
-            is BookingIntent.BookingButton -> {
-                // handle booking click
-            }
-
             is BookingIntent.SelectPaymentMethod -> {
                 _state.update { it.copy(selectedPaymentMethod = intent.method) }
             }
@@ -149,8 +146,48 @@ class BookingViewModel @Inject constructor(
             }
 
             is BookingIntent.MakePayment -> {
-
+                createPaymentIntent()
             }
         }
+    }
+
+    fun createPaymentIntent() = viewModelScope.launch {
+        try {
+            val current = state.value
+            _state.update { it.copy(isLoading = true) }
+
+            if (current.selectedPaymentMethod == PaymentMethod.ONLINE) {
+                val createSlotReservationDto = ReservationRequestDTO(
+                    courtId = current.selectedCourt?.id ?: "",
+                    startTime = current.selectedSlot?.start!!,
+                    endTime = current.selectedSlot.end,
+                    idempotencyKey = Common.generateIdempotencyKey(),
+                    paymentMethod = current.selectedPaymentMethod.name.lowercase(),
+                    arenaId = current.arena?.id ?: ""
+                )
+
+                useCase.createPaymentIntent(createSlotReservationDto).fold(
+                    onSuccess = { response ->
+                        _effect.send(BookingEffect.ShowPaymentDialog(response))
+
+                    }, onFailure = { error ->
+                        _effect.send(
+                            BookingEffect.ShowError(
+                                error.message ?: "create payment Failed"
+                            )
+                        )
+                    }
+                )
+            }
+        } catch (e: Exception) {
+            _effect.send(
+                BookingEffect.ShowError(
+                    e.message ?: "create payment Failed"
+                )
+            )
+        } finally {
+            _state.update { it.copy(isLoading = false) }
+        }
+
     }
 }

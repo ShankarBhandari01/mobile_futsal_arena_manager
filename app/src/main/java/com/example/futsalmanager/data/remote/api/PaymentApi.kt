@@ -5,7 +5,7 @@ import com.example.futsalmanager.data.remote.dto.ReservationRequestDTO
 import com.example.futsalmanager.data.remote.dto.ReservationResponseDTO
 
 interface PaymentApi {
-    suspend fun createPayment(userId: String): Result<PaymentIntentResponseDTO>
+    suspend fun createPayment(bookingId: String): Result<PaymentIntentResponseDTO>
     suspend fun reserve(request: ReservationRequestDTO): Result<ReservationResponseDTO>
 }
 

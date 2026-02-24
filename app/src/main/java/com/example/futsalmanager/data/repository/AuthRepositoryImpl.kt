@@ -29,14 +29,14 @@ class AuthRepositoryImpl @Inject constructor(
         return api.register(registerRequest)
     }
 
-    override val userFlow: Flow<User?> get() = sessionStorage.userFlow
+    override val getUser: Flow<User?> get() = sessionStorage.userFlow
 
     override suspend fun logout(): Result<Unit> {
         return api.logout()
     }
 
-    override suspend fun refresh(): Result<LoginResponse> {
-        return api.refresh()
+    override suspend fun refresh(refreshToken: String): Result<LoginResponse> {
+        return api.refresh(refreshToken)
     }
 
     override suspend fun forgotPassword(email: String): Result<ResetCodeResponse> {
@@ -47,8 +47,8 @@ class AuthRepositoryImpl @Inject constructor(
         return api.resetPassword(changePasswordRequest)
     }
 
-    override suspend fun verifyEmail(email: String,otp:String): Result<Unit> {
-        return api.verifyEmail(email,otp)
+    override suspend fun verifyEmail(email: String, otp: String): Result<Unit> {
+        return api.verifyEmail(email, otp)
     }
 
     override suspend fun getAccessToken(): String? = sessionStorage.getAccessToken()

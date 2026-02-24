@@ -9,5 +9,5 @@ interface AuthRepository : AuthApi {
     suspend fun getAccessToken(): String?
     suspend fun getRefreshToken(): String?
     suspend fun clear()
-    val userFlow: Flow<User?>
+    val getUser: Flow<User?>
 }

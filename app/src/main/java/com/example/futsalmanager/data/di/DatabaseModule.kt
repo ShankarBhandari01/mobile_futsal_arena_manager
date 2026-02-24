@@ -24,7 +24,6 @@ object DatabaseModule {
             "futsal_db"
         )
             .fallbackToDestructiveMigration(false)
-            .allowMainThreadQueries()
             .build()
     }
 
