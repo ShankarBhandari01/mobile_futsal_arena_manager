@@ -1,7 +1,6 @@
 package com.example.futsalmanager.ui.home.booking
 
 import android.os.Build
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -47,7 +46,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -94,67 +92,109 @@ import com.example.futsalmanager.domain.model.Slot
 import com.example.futsalmanager.domain.model.emum.PaymentMethod
 import com.example.futsalmanager.domain.model.emum.SlotStatus
 import com.example.futsalmanager.domain.model.emum.TimeSegment
+import com.example.futsalmanager.ui.component.BannerState
 import com.example.futsalmanager.ui.component.BookingHeading
+import com.example.futsalmanager.ui.component.TopMessageBanner
 import com.example.futsalmanager.ui.home.booking.recurringBooking.RecurringBookingSheetContent
 import com.example.futsalmanager.ui.home.viewModels.BookingViewModel
+import com.stripe.android.PaymentConfiguration
 import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
-import com.stripe.android.paymentsheet.rememberPaymentSheet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
 
+private fun presentPaymentSheet(
+    paymentSheet: PaymentSheet,
+    customerConfig: PaymentSheet.CustomerConfiguration,
+    paymentIntentClientSecret: String
+) {
+    paymentSheet.presentWithPaymentIntent(
+        paymentIntentClientSecret,
+        PaymentSheet.Configuration.Builder(merchantDisplayName = "Futsal Manager")
+            .allowsDelayedPaymentMethods(true)
+            .build()
+    )
+}
+
 @Composable
 fun BookingScreenRoute(
-    snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit
 ) {
+
+    var bannerState by remember { mutableStateOf<BannerState>(BannerState.Hidden) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<BookingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val activity = context as ComponentActivity
 
-    val paymentResultCallback = { result: PaymentSheetResult ->
-        when (result) {
-            is PaymentSheetResult.Completed -> {
-                // Tell the ViewModel to verify the booking on the backend
+    var customerConfig by remember { mutableStateOf<PaymentSheet.CustomerConfiguration?>(null) }
+    var paymentIntentClientSecret by remember { mutableStateOf<String?>(null) }
 
+    val paymentSheet = remember {
+        PaymentSheet.Builder({
+            bannerState = when (it) {
+                is PaymentSheetResult.Completed -> {
+                    BannerState.Success("Payment Successful! Booking confirmed.")
+                }
+
+                is PaymentSheetResult.Canceled -> {
+                    BannerState.Hidden
+                }
+
+                is PaymentSheetResult.Failed -> {
+                    BannerState.Error("Payment Failed: ${it.error.localizedMessage}")
+                }
             }
+        })
+    }.build()
 
-            is PaymentSheetResult.Canceled -> {
-                // Log cancellation or just stop the loading state
 
-            }
-
-            is PaymentSheetResult.Failed -> {
-                // Push an effect to show the error
-
-            }
+    LaunchedEffect(bannerState) {
+        if (bannerState !is BannerState.Hidden) {
+            delay(4000)
+            bannerState = BannerState.Hidden
         }
     }
 
-    val paymentSheet = rememberPaymentSheet(paymentResultCallback)
-
     LaunchedEffect(Unit) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effect.collect { effect ->
                 when (effect) {
                     is BookingEffect.ShowError -> {
-                        snackbarHostState.showSnackbar(effect.message)
+                        bannerState = BannerState.Error(effect.message)
                     }
 
                     is BookingEffect.ShowPaymentDialog -> {
                         val payment = effect.paymentIntent
-                        paymentSheet.presentWithPaymentIntent(
-                            paymentIntentClientSecret = payment.paymentIntentResponseDTO.clientSecret,
-                            configuration = PaymentSheet.Configuration(
-                                merchantDisplayName = state.arena?.name ?: "Arena",
-                                allowsDelayedPaymentMethods = true
+                        paymentIntentClientSecret = payment.paymentIntentResponseDTO.clientSecret
+
+                        if (payment.user?.stripeCustomerId != null && payment.user.stripeCustomerId != "") {
+                            customerConfig =
+                                PaymentSheet.CustomerConfiguration.createWithCustomerSession(
+                                    id = payment.user.stripeCustomerId,
+                                    clientSecret = payment.paymentIntentResponseDTO.clientSecret
+                                )
+                        }
+                        if (payment.arenas?.stripePublishableKey != null && payment.arenas?.stripePublishableKey != "") {
+                            PaymentConfiguration.init(
+                                context,
+                                payment.arenas?.stripePublishableKey!!
                             )
-                        )
+                            if (customerConfig != null && paymentIntentClientSecret != null) {
+                                presentPaymentSheet(
+                                    paymentSheet,
+                                    customerConfig!!,
+                                    paymentIntentClientSecret!!
+                                )
+                            }
+                        } else {
+                            bannerState =
+                                BannerState.Error("Online Payment not available at the moment. ")
+                        }
 
                     }
                 }
@@ -162,11 +202,18 @@ fun BookingScreenRoute(
         }
     }
 
-    ArenaBookingScreen(
-        state = state,
-        onIntent = viewModel::dispatch,
-        onBackClick = onBackClick
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        ArenaBookingScreen(
+            state = state,
+            onIntent = viewModel::dispatch,
+            onBackClick = onBackClick
+        )
+
+        TopMessageBanner(
+            state = bannerState,
+            onDismiss = { bannerState = BannerState.Hidden }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -292,7 +339,6 @@ fun ArenaBookingScreen(
                     AvailableSlotsSection(
                         state = state,
                         onSlotSelected = { slot ->
-                            slot.isSelected = true
                             onIntent(BookingIntent.SelectSlot(slot))
                         }
                     )
@@ -559,7 +605,6 @@ fun BookingSelectionCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
             state.courts.forEach { court ->
                 val isSelected = state.selectedCourt == court
 
@@ -814,6 +859,7 @@ fun TimeSlotCard(
     val isAvailable = status == SlotStatus.AVAILABLE
     val isBooked = status == SlotStatus.BOOKED
     val isUnavailable = status == SlotStatus.UNAVAILABLE
+    val isOnHold = status == SlotStatus.ON_HOLD
     val isDisabled = isBooked || isUnavailable
 
     val containerColor by animateColorAsState(
@@ -821,6 +867,7 @@ fun TimeSlotCard(
             isBooked -> MaterialTheme.colorScheme.errorContainer
             isSelected -> MaterialTheme.colorScheme.primaryContainer
             isAvailable -> MaterialTheme.colorScheme.surfaceContainerHigh
+            isOnHold -> MaterialTheme.colorScheme.tertiaryContainer
             else -> MaterialTheme.colorScheme.surface
         },
         label = "containerColor"
@@ -841,7 +888,7 @@ fun TimeSlotCard(
     }
 
     Surface(
-        onClick = { if (!isDisabled) onClick() },
+        onClick = { if (isAvailable) onClick() },
         modifier = Modifier
             .fillMaxWidth()
             .alpha(if (isUnavailable) 0.38f else 1f),
@@ -1040,7 +1087,7 @@ fun PaymentSection(
         Button(
             onClick = {
 
-                    onPaymentButtonClick()
+                onPaymentButtonClick()
 
             },
             modifier = Modifier

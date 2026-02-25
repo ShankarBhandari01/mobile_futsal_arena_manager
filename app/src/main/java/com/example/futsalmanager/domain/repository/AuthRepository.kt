@@ -8,6 +8,6 @@ interface AuthRepository : AuthApi {
     // data store apis
     suspend fun getAccessToken(): String?
     suspend fun getRefreshToken(): String?
-    suspend fun clear()
+    suspend fun clear(isAutoLogout: Boolean = false)
     val getUser: Flow<User?>
 }

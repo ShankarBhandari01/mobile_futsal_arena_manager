@@ -14,17 +14,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.futsalmanager.core.utils.LogoutEventBus
 import com.example.futsalmanager.ui.home.FutsalHomeScreenRoute
 import com.example.futsalmanager.ui.home.booking.BookingScreenRoute
 import com.example.futsalmanager.ui.login.LoginScreenRoute
@@ -46,9 +49,8 @@ class RootAppActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        splashScreen.setKeepOnScreenCondition {
-            !viewModel.isReady.value
-        }
+
+        splashScreen.setKeepOnScreenCondition { !viewModel.isReady.value }
 
         enableEdgeToEdge()
         setContent {
@@ -59,16 +61,15 @@ class RootAppActivity : ComponentActivity() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppRoot() {
 
     val viewModel = hiltViewModel<LoginRegisterViewModel>()
     val startDest by viewModel.startDestination.collectAsStateWithLifecycle()
+    val navController = rememberNavController()
 
     startDest?.let { destination ->
 
-        val navController = rememberNavController()
         val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
@@ -87,7 +88,6 @@ fun AppRoot() {
                     route = Routes.LOGIN_SCREEN
                 ) {
                     LoginScreenRoute(
-                        snackbarHostState = snackbarHostState,
                         onNavigateToHome = {
                             navController.navigate(Routes.HOME_SCREEN) {
                                 popUpTo(navController.graph.startDestinationId) {
@@ -154,15 +154,9 @@ fun AppRoot() {
                     route = Routes.HOME_SCREEN
                 ) {
                     FutsalHomeScreenRoute(
-                        snackbarHostState = snackbarHostState,
                         onLogout = {
                             viewModel.logout()
-                            navController.navigate(Routes.LOGIN_SCREEN) {
-                                popUpTo(Routes.HOME_SCREEN)
-                                {
-                                    inclusive = true
-                                }
-                            }
+                            navigateToLoginScreen(navController)
                         },
                         arenaClicked = { arenaId ->
                             Log.d("arenaId", arenaId)
@@ -178,7 +172,6 @@ fun AppRoot() {
                     })
                 ) {
                     BookingScreenRoute(
-                        snackbarHostState = snackbarHostState,
                         onBackClick = { navController.popBackStack() }
                     )
                 }
@@ -186,4 +179,22 @@ fun AppRoot() {
         }
     }
 
+
+    LaunchedEffect(Unit) {
+        LogoutEventBus.logoutEvent.collect {
+            Log.e("LogoutEventBus", "Logout event received")
+           // viewModel.logout(true)
+            //navigateToLoginScreen(navController)
+        }
+
+    }
+}
+
+fun navigateToLoginScreen(navController: NavHostController) {
+    navController.navigate(Routes.LOGIN_SCREEN) {
+        popUpTo(Routes.HOME_SCREEN)
+        {
+            inclusive = true
+        }
+    }
 }

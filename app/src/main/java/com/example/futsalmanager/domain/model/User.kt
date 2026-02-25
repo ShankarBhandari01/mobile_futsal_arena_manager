@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    val activeSessionId: String,
+    val activeSessionId: String?="",
     val avatarUrl: String? = "",
     val createdAt: String?="",
     val deletedAt: String? = "",

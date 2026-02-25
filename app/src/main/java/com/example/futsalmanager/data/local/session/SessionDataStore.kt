@@ -57,6 +57,20 @@ class SessionDataStore @Inject constructor(
         }
     }
 
+    override suspend fun updateSessionTokens(
+        accessToken: String,
+        refreshToken: String,
+        expiresIn: Int
+    ) {
+        dataStore.edit { pref ->
+            cachedToken = accessToken
+
+            pref[Keys.ACCESS] = accessToken
+            pref[Keys.REFRESH] = refreshToken
+            pref[Keys.EXPIRES] = expiresIn
+        }
+    }
+
     override suspend fun getRefreshToken(): String? {
         return dataStore.data.first()[Keys.REFRESH]
     }

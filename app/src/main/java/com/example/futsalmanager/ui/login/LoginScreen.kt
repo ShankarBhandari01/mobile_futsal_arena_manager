@@ -11,12 +11,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,45 +27,59 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.futsalmanager.ui.component.BannerState
 import com.example.futsalmanager.ui.component.GenericSegmentedToggle
 import com.example.futsalmanager.ui.component.LoginContent
 import com.example.futsalmanager.ui.component.RegisterContent
 import com.example.futsalmanager.ui.component.TermsText
+import com.example.futsalmanager.ui.component.TopMessageBanner
 import com.example.futsalmanager.ui.login.viewmodels.LoginRegisterViewModel
+import kotlinx.coroutines.delay
 
 
 @Composable
 fun LoginScreenRoute(
-    snackbarHostState: SnackbarHostState,
-    onNavigateToHome: () -> Unit,
-    onEmailVerification: () -> Unit,
-    onNavigateToForgot: () -> Unit
+    onNavigateToHome: () -> Unit, onEmailVerification: () -> Unit, onNavigateToForgot: () -> Unit
 ) {
+    var bannerState by remember { mutableStateOf<BannerState>(BannerState.Hidden) }
     val viewModel = hiltViewModel<LoginRegisterViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(bannerState) {
+        if (bannerState !is BannerState.Hidden) {
+            delay(4000)
+            bannerState = BannerState.Hidden
+        }
+    }
 
-    LoginScreen(
-        state = state,
-        onIntent = viewModel::dispatch,
-    )
     // Effects
     LaunchedEffect(Unit) {
         viewModel.effect.collect { e ->
             when (e) {
                 is AuthEffect.NavigateToEmailVerification -> onEmailVerification()
-                is AuthEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+                is AuthEffect.ShowError -> {
+                    bannerState = BannerState.Error(e.message)
+
+                }
 
                 is AuthEffect.Navigate -> {
+                    bannerState = BannerState.Success("Login Successful")
                     onNavigateToHome()
                 }
 
                 is AuthEffect.NavigateToForgotPassword -> onNavigateToForgot()
-                else -> {
-
-                }
             }
         }
     }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LoginScreen(
+            state = state,
+            onIntent = viewModel::dispatch,
+        )
+        TopMessageBanner(
+            state = bannerState, onDismiss = { bannerState = BannerState.Hidden })
+    }
+
 }
 
 
@@ -73,8 +89,7 @@ fun LoginScreen(
     onIntent: (AuthIntent) -> Unit,
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
     ) {
         Box(contentAlignment = Alignment.Center) {
             Card(
@@ -88,8 +103,7 @@ fun LoginScreen(
                     .fillMaxWidth()
             ) {
                 LazyColumn(
-                    modifier = Modifier
-                        .padding(28.dp),
+                    modifier = Modifier.padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {    // Title
@@ -156,10 +170,6 @@ fun LoginScreen(
 fun LoginPreview() {
     LoginScreen(
         state = AuthState(
-            email = "demo@mail.com",
-            password = "123456",
-            loading = false
-        ),
-        onIntent = {}
-    )
+            email = "demo@mail.com", password = "123456", loading = false
+        ), onIntent = {})
 }

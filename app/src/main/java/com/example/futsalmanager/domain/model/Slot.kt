@@ -10,13 +10,12 @@ data class Slot(
     val price: String,
     val pricingBadge: String,
     val start: String,
-    val status: String,
-    var isSelected: Boolean? = false
+    val status: String
 ){
     val slotStatus: SlotStatus
         get() = try {
             SlotStatus.valueOf(status.uppercase())
         } catch (_: Exception) {
-            SlotStatus.UNAVAILABLE // Fallback for unknown statuses
+            SlotStatus.UNAVAILABLE
         }
 }

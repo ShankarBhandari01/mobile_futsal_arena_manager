@@ -45,12 +45,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.ui.home.HomeIntent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun FutsalDrawerSheet(
+    user: User? = null,
     drawerState: DrawerState,
     scope: CoroutineScope,
     onIntent: (HomeIntent) -> Unit = {}
@@ -126,62 +128,73 @@ fun FutsalDrawerSheet(
 
             // --- BOTTOM PROFILE SECTION ---
             HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
+            if (user != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+                {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                val first = user.firstName?.firstOrNull()?.uppercase()
+                                val last = user.lastName?.firstOrNull()?.uppercase()
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "$first$last",
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
                             Text(
-                                "JP",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.Bold
+                                text = "${user.firstName ?: "No First Name"} ${user?.lastName ?: "No Last Name"}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = user.email ?: "No Email",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = user.scope ?: "Player",
+                                color = Color.Gray,
+                                fontSize = 12.sp
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "john.player@gmail.com",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Custom Outlined Logout Button
+                    OutlinedButton(
+                        onClick = {
+                            onIntent(HomeIntent.LogoutClicked)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.errorContainer),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
                         )
-                        Text(
-                            text = "Player",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Log out")
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Custom Outlined Logout Button
-                OutlinedButton(
-                    onClick = {
-                        onIntent(HomeIntent.LogoutClicked)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color(0xFFD32F2F)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F))
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Log out")
-                }
             }
+
         }
     }
 }
@@ -226,7 +239,10 @@ fun FutsalDrawerSheetPreview() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    FutsalDrawerSheet(drawerState, scope)
+    FutsalDrawerSheet(
+        drawerState = drawerState,
+        scope = scope
+    )
 }
 
 

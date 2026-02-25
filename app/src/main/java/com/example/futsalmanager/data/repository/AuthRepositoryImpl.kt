@@ -3,6 +3,7 @@ package com.example.futsalmanager.data.repository
 import com.example.futsalmanager.data.remote.api.AuthApi
 import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.LoginResponse
+import com.example.futsalmanager.data.remote.dto.RefreshTokenResponse
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.data.remote.dto.RegisterResponse
 import com.example.futsalmanager.data.remote.dto.ResetCodeResponse
@@ -35,7 +36,7 @@ class AuthRepositoryImpl @Inject constructor(
         return api.logout()
     }
 
-    override suspend fun refresh(refreshToken: String): Result<LoginResponse> {
+    override suspend fun refresh(refreshToken: String): Result<RefreshTokenResponse> {
         return api.refresh(refreshToken)
     }
 
@@ -56,9 +57,13 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getRefreshToken() =
         sessionStorage.getRefreshToken()
 
-    override suspend fun clear() {
-        sessionStorage.clear()
-        this.logout()
+    override suspend fun clear(isAutoLogout: Boolean) {
+        if (isAutoLogout) {
+            sessionStorage.clear()
+        } else {
+            this.logout()
+        }
+
     }
 
 }

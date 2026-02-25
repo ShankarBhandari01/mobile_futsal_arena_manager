@@ -13,15 +13,17 @@ import com.example.futsalmanager.ui.home.booking.BookingEffect
 import com.example.futsalmanager.ui.home.booking.BookingIntent
 import com.example.futsalmanager.ui.home.booking.BookingState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -65,48 +67,59 @@ class BookingViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         arena = arenaWithCourts?.arena,
-                        courts = arenaWithCourts?.courts ?: emptyList()
+                        courts = arenaWithCourts?.courts ?: emptyList(),
+                        selectedCourt = arenaWithCourts?.courts?.firstOrNull()
                     )
                 }
             }
-
-
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSlotRequests() {
+        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             _state
-                .map { it.selectedCourt?.id to it.selectedDate }
+                .map { Triple(it.arena?.subdomain, it.selectedCourt?.id, it.selectedDate) }
                 .distinctUntilChanged()
-                .collect { (courtId, date) ->
-
-                    if (courtId == null) return@collect
-
-                    loadSlots(courtId, date)
+                .flatMapLatest { (subDomain, courtId, date) ->
+                    if (subDomain == null || courtId == null) {
+                        emptyFlow()
+                    } else {
+                        useCase.invoke(
+                            subDomain = subDomain,
+                            courtId = courtId,
+                            date = date.toString(),
+                            includeStatus = true
+                        )
+                    }
+                }
+                .collect { result ->
+                    result.fold(
+                        onSuccess = { slots ->
+                            _state.update { current ->
+                                val updatedSelectedSlot =
+                                    slots.find { it.start == current.selectedSlot?.start && it.end == current.selectedSlot.end }
+                                current.copy(
+                                    availableSlots = slots,
+                                    selectedSlot = updatedSelectedSlot,
+                                    isLoading = false
+                                )
+                            }
+                        },
+                        onFailure = {
+                            _state.update { it.copy(isLoading = false) }
+                            _effect.send(
+                                BookingEffect.ShowError(
+                                    it.message ?: "Failed to load court slots"
+                                )
+                            )
+                        }
+                    )
                 }
         }
+
     }
 
-    private suspend fun loadSlots(courtId: String, date: LocalDate) {
-
-        val subDomain = _state.value.arena?.subdomain ?: return
-
-        useCase.getCourtSlots(
-            subDomain = subDomain,
-            courtId = courtId,
-            date = date.toString(),
-            includeStatus = true
-        ).fold(
-            onSuccess = { slots ->
-                _state.update { it.copy(availableSlots = slots) }
-            },
-            onFailure = {
-                _effect.send(
-                    BookingEffect.ShowError(it.message ?: "Failed to load court slots")
-                )
-            }
-        )
-    }
 
     private fun observeDisplayTime() {
         viewModelScope.launch {
@@ -168,6 +181,7 @@ class BookingViewModel @Inject constructor(
 
                 useCase.createPaymentIntent(createSlotReservationDto).fold(
                     onSuccess = { response ->
+                        response.arenas = current.arena!!
                         _effect.send(BookingEffect.ShowPaymentDialog(response))
 
                     }, onFailure = { error ->
@@ -190,4 +204,6 @@ class BookingViewModel @Inject constructor(
         }
 
     }
+
+
 }

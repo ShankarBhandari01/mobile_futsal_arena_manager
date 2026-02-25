@@ -20,7 +20,7 @@ class LoginUseCase @Inject constructor(
         return repo.register(registerRequest)
     }
 
-    suspend fun logout() = repo.clear()
+    suspend fun logout(isAutoLogout: Boolean = false) = repo.clear(isAutoLogout)
     suspend fun getAccessToken() = repo.getAccessToken()
     suspend fun getRefreshToken() = repo.getRefreshToken()
     val userFlow get() = repo.getUser

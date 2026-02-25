@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.withLock
 
 class TokenRefreshPlugin(
     private val sessionStorage: SessionStorage,
-    private val getAuthApi: () -> AuthApi,  // lazy to avoid circular dependency
+    private val getAuthApi: () -> AuthApi,
     private val onLogout: () -> Unit,
 ) {
 
@@ -29,6 +29,8 @@ class TokenRefreshPlugin(
         override val key = AttributeKey<TokenRefreshPlugin>("TokenRefreshPlugin")
         private val refreshMutex = Mutex()
         val IS_REFRESH_REQUEST = AttributeKey<Boolean>("IsRefreshRequest")
+        val IS_LOGOUT_REQUEST = AttributeKey<Boolean>("IsLogoutRequest")
+
 
         override fun prepare(block: Config.() -> Unit): TokenRefreshPlugin {
             val config = Config().apply(block)
@@ -55,8 +57,8 @@ class TokenRefreshPlugin(
                 val refreshed = refreshMutex.withLock {
                     // If another coroutine already refreshed while we waited, skip
                     val currentToken = plugin.sessionStorage.getAccessToken()
-                    val requestToken = request.headers[HttpHeaders.Authorization]
-                        ?.removePrefix("Bearer ")
+                    val requestToken =
+                        request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
 
                     if (currentToken != null && currentToken != requestToken) {
                         true // already refreshed by someone else
@@ -67,10 +69,15 @@ class TokenRefreshPlugin(
 
                 if (refreshed) {
                     val newToken = plugin.sessionStorage.getAccessToken()
-                    request.headers.remove(HttpHeaders.Authorization)
-                    request.bearerAuth(newToken ?: "")
-                    execute(request)
+                    val newRequest = request.apply {
+                        headers.remove(HttpHeaders.Authorization)
+                        bearerAuth(newToken ?: "")
+                    }
+                    execute(newRequest)
                 } else {
+                    if (request.attributes.getOrNull(IS_LOGOUT_REQUEST) == true) {
+                        return@intercept originalCall
+                    }
                     plugin.onLogout()
                     originalCall
                 }
@@ -79,17 +86,18 @@ class TokenRefreshPlugin(
 
         private suspend fun tryRefresh(plugin: TokenRefreshPlugin): Boolean {
             val refreshToken = plugin.sessionStorage.getRefreshToken() ?: return false
-
-            // Use  existing AuthApi.refresh — clean and consistent
             return plugin.getAuthApi()
                 .refresh(refreshToken)
                 .fold(
                     onSuccess = { response ->
-                        plugin.sessionStorage.saveSession(response)
+                        plugin.sessionStorage.updateSessionTokens(
+                            response.accessToken,
+                            response.refreshToken,
+                            response.expiresIn
+                        )
                         true
                     },
                     onFailure = {
-                        plugin.sessionStorage.clear()
                         false
                     }
                 )

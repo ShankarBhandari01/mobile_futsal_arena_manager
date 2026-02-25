@@ -1,6 +1,7 @@
 package com.example.futsalmanager.ui.home
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.expandVertically
@@ -50,7 +51,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -87,13 +87,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.futsalmanager.domain.model.Arenas
+import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.ui.component.ArenaCard
 import com.example.futsalmanager.ui.component.ArenaShimmerItem
+import com.example.futsalmanager.ui.component.BannerState
 import com.example.futsalmanager.ui.component.EmptyStateComponent
 import com.example.futsalmanager.ui.component.FutsalDatePickerField
 import com.example.futsalmanager.ui.component.GenericSegmentedToggle
@@ -101,9 +102,11 @@ import com.example.futsalmanager.ui.component.HomePermissionWrapper
 import com.example.futsalmanager.ui.component.LocationSuccessBanner
 import com.example.futsalmanager.ui.component.LocationWarningBanner
 import com.example.futsalmanager.ui.component.LogoutConfirmationDialog
+import com.example.futsalmanager.ui.component.TopMessageBanner
 import com.example.futsalmanager.ui.home.navigation_drawer.FutsalDrawerSheet
 import com.example.futsalmanager.ui.home.viewModels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -117,17 +120,27 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun FutsalHomeScreenRoute(
-    snackbarHostState: SnackbarHostState,
     onLogout: () -> Unit,
     arenaClicked: (String) -> Unit
 ) {
+    var bannerState by remember { mutableStateOf<BannerState>(BannerState.Hidden) }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewmodel = hiltViewModel<HomeViewModel>()
     val context = LocalContext.current
-
+    val user by viewmodel.user.collectAsStateWithLifecycle(
+        lifecycleOwner = lifecycleOwner
+    )
     val state by viewmodel.state.collectAsStateWithLifecycle(
         lifecycleOwner = lifecycleOwner
     )
+
+    LaunchedEffect(bannerState) {
+        if (bannerState !is BannerState.Hidden) {
+            delay(4000)
+            bannerState = BannerState.Hidden
+        }
+    }
 
     DisposableEffect(Unit) {
         viewmodel.dispatch(HomeIntent.ScreenStarted)
@@ -137,10 +150,11 @@ fun FutsalHomeScreenRoute(
     }
 
     LaunchedEffect(Unit) {
-
         viewmodel.effect.collect { e ->
             when (e) {
-                is HomeEffect.ShowError -> snackbarHostState.showSnackbar(e.message)
+                is HomeEffect.ShowError -> {
+                    bannerState = BannerState.Error(e.message)
+                }
 
                 is HomeEffect.NavigateToMyBooking -> {
                     // Handle navigation
@@ -168,9 +182,7 @@ fun FutsalHomeScreenRoute(
                 }
             }
         }
-
     }
-
 
     HomePermissionWrapper(
         onPermissionChanged = { isGranted ->
@@ -179,18 +191,26 @@ fun FutsalHomeScreenRoute(
             }
         }
     ) {
+
         FutsalHomeScreen(
+            user = user,
             state = state,
             onIntent = viewmodel::dispatch
         )
+
+        TopMessageBanner(
+            state = bannerState,
+            onDismiss = { bannerState = BannerState.Hidden }
+        )
     }
+
 
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FutsalHomeScreen(
-    modifier: Modifier = Modifier,
+    user: User? = null,
     state: HomeState = HomeState(),
     onIntent: (HomeIntent) -> Unit
 ) {
@@ -228,7 +248,11 @@ fun FutsalHomeScreen(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            FutsalDrawerSheet(drawerState, scope, onIntent)
+            FutsalDrawerSheet(
+                user = user,
+                drawerState, scope,
+                onIntent
+            )
         }
     ) {
         Scaffold(
@@ -278,14 +302,17 @@ fun FutsalHomeScreen(
                     }, actions = {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFFD32F2F),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(36.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
+                                val first = user?.firstName?.firstOrNull()?.uppercase()
+                                val last = user?.lastName?.firstOrNull()?.uppercase()
+
                                 Text(
-                                    "JP",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
+                                    "$first$last",
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -797,8 +824,9 @@ fun ArenaDetailSheet(
 
         Button(
             onClick = {
-                val uri =
-                    "google.navigation:q=${arena.latitude},${arena.longitude}".toUri()
+                val uriString =
+                    "google.navigation:q=${arena.latitude},${arena.longitude}"
+                val uri = Uri.parse(uriString)
                 context.startActivity(Intent(Intent.ACTION_VIEW, uri))
             },
             modifier = Modifier.fillMaxWidth()

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.domain.model.FilterParams
 import com.example.futsalmanager.domain.model.LocationModel
+import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.domain.usecase.HomeUseCase
 import com.example.futsalmanager.ui.home.HomeEffect
 import com.example.futsalmanager.ui.home.HomeIntent
@@ -53,6 +54,12 @@ class HomeViewModel @Inject constructor(
         observeLocationState()
         observeSearchAndFilters()
     }
+
+    val user: StateFlow<User?> = useCase.userFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     private fun observeLocationState() {
         _isScreenActive

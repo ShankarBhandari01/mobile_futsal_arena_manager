@@ -176,7 +176,9 @@ class LoginRegisterViewModel @Inject constructor(
                 current.email,
                 current.password
             ).fold(
-                onSuccess = { _effect.send(AuthEffect.Navigate) },
+                onSuccess = {
+                    _effect.send(AuthEffect.Navigate)
+                },
                 onFailure = { throwable ->
                     if (throwable is ApiException) {
                         when (throwable.type) {
@@ -208,9 +210,10 @@ class LoginRegisterViewModel @Inject constructor(
     }
 
 
-    fun logout() {
+    fun logout(isAutoLogout: Boolean = false) {
         viewModelScope.launch {
-            loginUseCase.logout()
+            loginUseCase.logout(isAutoLogout)
         }
     }
+
 }

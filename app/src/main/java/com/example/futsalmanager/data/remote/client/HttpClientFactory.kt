@@ -20,13 +20,19 @@ import kotlinx.serialization.json.Json
 object HttpClientFactory {
 
     fun create(
-        tokenProvider: () -> String?,
+        tokenProvider: suspend () -> String?,
         sessionStorage: SessionStorage,
         getAuthApi: () -> AuthApi,
         onLogout: () -> Unit,
     ): HttpClient {
 
         return HttpClient(OkHttp) {
+
+            engine {
+                config {
+                    cache(null)
+                }
+            }
 
             expectSuccess = true
 

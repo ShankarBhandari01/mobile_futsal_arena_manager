@@ -6,5 +6,7 @@ enum class ApiExceptionTypes {
     CONFLICT,
     INVALID_OTP,
     SESSION_INVALID,
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
+    VALIDATION_ERROR,
+    INVALID_TOKEN
 }

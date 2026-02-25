@@ -22,6 +22,7 @@ class PaymentApiImpl @Inject constructor(
             client.post(ApiRegistry.CREATE_PAYMENT) {
                 url {
                     path(
+                        ApiRegistry.BOOKINGS,
                         bookingId,
                         ApiRegistry.CREATE_PAYMENT
                     )

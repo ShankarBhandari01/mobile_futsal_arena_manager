@@ -23,6 +23,7 @@ suspend inline fun <T> safeApiCall(
         } catch (ex: Exception) {
             ApiError(error = "UNKNOWN", message = e.localizedMessage ?: "Client error")
         }
+
         val type = try {
             ApiExceptionTypes.valueOf(errorMessage.error)
         } catch (ex: Exception) {

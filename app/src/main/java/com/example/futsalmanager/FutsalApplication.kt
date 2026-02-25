@@ -7,14 +7,14 @@ import dagger.hilt.android.HiltAndroidApp
 @HiltAndroidApp
 class FutsalApplication : Application() {
     override fun onCreate() {
-        if (BuildConfig.DEBUG) {
+       /* if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(
                 StrictMode.ThreadPolicy.Builder()
                     .detectAll()
-                    .penaltyLog() // shows exact stack trace in Logcat
+                    .penaltyLog()
                     .build()
             )
-        }
+        }*/
         super.onCreate()
 
     }

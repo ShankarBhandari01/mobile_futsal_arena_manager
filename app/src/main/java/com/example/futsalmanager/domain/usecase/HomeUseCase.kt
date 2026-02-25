@@ -4,6 +4,7 @@ import com.example.futsalmanager.core.utils.ApplicationScope
 import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.model.LocationModel
+import com.example.futsalmanager.domain.repository.AuthRepository
 import com.example.futsalmanager.domain.repository.HomeRepository
 import com.example.futsalmanager.domain.repository.LocationRepository
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +18,9 @@ class HomeUseCase @Inject constructor(
     private val repo: HomeRepository,
     private val location: LocationRepository,
     @ApplicationScope private val appScope: CoroutineScope,
+    private val authRepo: AuthRepository
 ) {
+    val userFlow get() = authRepo.getUser
     val arenas = repo.getArenaListFromDB()
 
     val userLocation = location.getLiveLocation().stateIn(
