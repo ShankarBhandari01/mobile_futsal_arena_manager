@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.core.utils.Common.isValidEmail
 import com.example.futsalmanager.domain.usecase.LoginUseCase
-import com.example.futsalmanager.ui.apiExceptions.ApiException
+import com.example.futsalmanager.core.apiExceptions.ApiException
 import com.example.futsalmanager.ui.login.forget_password.ForgetPasswordEffect
 import com.example.futsalmanager.ui.login.forget_password.ForgetPasswordIntent
 import com.example.futsalmanager.ui.login.forget_password.ForgetPasswordState

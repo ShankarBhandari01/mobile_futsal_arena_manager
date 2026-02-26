@@ -6,8 +6,8 @@ import com.example.futsalmanager.core.utils.Common.isValidEmail
 import com.example.futsalmanager.core.utils.Common.toRegisterRequest
 import com.example.futsalmanager.domain.model.User
 import com.example.futsalmanager.domain.usecase.LoginUseCase
-import com.example.futsalmanager.ui.apiExceptions.ApiException
-import com.example.futsalmanager.ui.apiExceptions.ApiExceptionTypes
+import com.example.futsalmanager.core.apiExceptions.ApiException
+import com.example.futsalmanager.core.apiExceptions.ApiExceptionTypes
 import com.example.futsalmanager.ui.login.AuthEffect
 import com.example.futsalmanager.ui.login.AuthIntent
 import com.example.futsalmanager.ui.login.AuthMode
@@ -47,7 +47,6 @@ class LoginRegisterViewModel @Inject constructor(
             _isReady.value = true
         }
     }
-
 
     val user: StateFlow<User?> = loginUseCase.userFlow.stateIn(
         scope = viewModelScope,

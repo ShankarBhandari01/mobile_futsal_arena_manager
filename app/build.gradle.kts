@@ -52,10 +52,13 @@ android {
 }
 
 dependencies {
+    // Google wallet
+    implementation("com.google.android.gms:play-services-wallet:19.5.0")
     // Stops slf4j from scanning classpath on first use — fixes the  ANR
     implementation("org.slf4j:slf4j-nop:2.0.13")
+    // stripe payment sdk
     implementation("com.stripe:stripe-android:22.8.1")
-
+    // m3
     implementation(libs.material)
     // backward compatibility library like instant, LocalDate,LocalTime
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
@@ -84,9 +87,11 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3.lint)
     implementation(libs.androidx.compose.ui.text)
+    // map
     implementation(libs.play.services.maps)
     ksp("com.google.dagger:hilt-android-compiler:2.59")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
     ksp("androidx.hilt:hilt-compiler:1.3.0")
 
     implementation(libs.androidx.datastore.preferences)

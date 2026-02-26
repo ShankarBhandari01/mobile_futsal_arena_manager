@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,7 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.futsalmanager.core.utils.LogoutEventBus
+import com.example.futsalmanager.core.ui.states.LogoutEventBus
 import com.example.futsalmanager.ui.home.FutsalHomeScreenRoute
 import com.example.futsalmanager.ui.home.booking.BookingScreenRoute
 import com.example.futsalmanager.ui.login.LoginScreenRoute
@@ -48,10 +50,7 @@ class RootAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-
-
         splashScreen.setKeepOnScreenCondition { !viewModel.isReady.value }
-
         enableEdgeToEdge()
         setContent {
             FutsalManagerTheme {
@@ -81,8 +80,31 @@ fun AppRoot() {
             NavHost(
                 navController = navController,
                 startDestination = destination,
-                modifier = Modifier
-                    .padding(paddingValues = padding)
+                modifier = Modifier.padding(padding),
+                enterTransition = {
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(250)
+                    )
+                },
+                exitTransition = {
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(250)
+                    )
+                },
+                popEnterTransition = {
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(250)
+                    )
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(250)
+                    )
+                }
             ) {
                 composable(
                     route = Routes.LOGIN_SCREEN
@@ -183,7 +205,7 @@ fun AppRoot() {
     LaunchedEffect(Unit) {
         LogoutEventBus.logoutEvent.collect {
             Log.e("LogoutEventBus", "Logout event received")
-           // viewModel.logout(true)
+            // viewModel.logout(true)
             //navigateToLoginScreen(navController)
         }
 

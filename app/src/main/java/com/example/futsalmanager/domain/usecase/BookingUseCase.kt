@@ -2,11 +2,10 @@ package com.example.futsalmanager.domain.usecase
 
 import com.example.futsalmanager.data.remote.dto.ReservationRequestDTO
 import com.example.futsalmanager.data.remote.dto.ReserveWithPaymentIntent
-import com.example.futsalmanager.domain.model.Arenas
 import com.example.futsalmanager.domain.model.Slot
-import com.example.futsalmanager.domain.repository.AuthRepository
-import com.example.futsalmanager.domain.repository.BookingRepository
-import com.example.futsalmanager.domain.repository.PaymentRepository
+import com.example.futsalmanager.domain.repository.IAuthRepository
+import com.example.futsalmanager.domain.repository.IBookingRepository
+import com.example.futsalmanager.domain.repository.IPaymentRepository
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -19,9 +18,9 @@ import javax.inject.Singleton
 
 @Singleton
 class BookingUseCase @Inject constructor(
-    private val bookingRepository: BookingRepository,
-    private val paymentRepository: PaymentRepository,
-    private val authRepository: AuthRepository
+    private val bookingRepository: IBookingRepository,
+    private val paymentRepository: IPaymentRepository,
+    private val authRepository: IAuthRepository
 ) {
     operator fun invoke(
         subDomain: String,

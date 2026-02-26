@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.futsalmanager.core.utils.Common.isValidPassword
 import com.example.futsalmanager.core.utils.Common.toChangePasswordRequest
 import com.example.futsalmanager.domain.usecase.LoginUseCase
-import com.example.futsalmanager.ui.apiExceptions.ApiException
+import com.example.futsalmanager.core.apiExceptions.ApiException
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetEffect
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetIntent
 import com.example.futsalmanager.ui.login.password_reset.OtpPasswordResetState

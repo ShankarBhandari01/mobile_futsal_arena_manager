@@ -2,8 +2,8 @@ package com.example.futsalmanager.data.remote.safe
 
 import android.util.Log
 import com.example.futsalmanager.data.remote.dto.ApiError
-import com.example.futsalmanager.ui.apiExceptions.ApiException
-import com.example.futsalmanager.ui.apiExceptions.ApiExceptionTypes
+import com.example.futsalmanager.core.apiExceptions.ApiException
+import com.example.futsalmanager.core.apiExceptions.ApiExceptionTypes
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.statement.bodyAsText

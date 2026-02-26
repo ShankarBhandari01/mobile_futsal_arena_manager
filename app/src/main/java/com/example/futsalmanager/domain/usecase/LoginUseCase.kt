@@ -3,14 +3,14 @@ package com.example.futsalmanager.domain.usecase
 import com.example.futsalmanager.data.remote.dto.ChangePasswordRequest
 import com.example.futsalmanager.data.remote.dto.RegisterRequest
 import com.example.futsalmanager.data.remote.dto.RegisterResponse
-import com.example.futsalmanager.domain.repository.AuthRepository
+import com.example.futsalmanager.domain.repository.IAuthRepository
 
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class LoginUseCase @Inject constructor(
-    private val repo: AuthRepository
+    private val repo: IAuthRepository
 ) {
     // write all the use cases here
     suspend operator fun invoke(email: String, password: String) = repo.login(email, password)

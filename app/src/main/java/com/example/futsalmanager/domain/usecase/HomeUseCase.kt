@@ -4,9 +4,9 @@ import com.example.futsalmanager.core.utils.ApplicationScope
 import com.example.futsalmanager.core.utils.Common.formatDateForApi
 import com.example.futsalmanager.data.remote.dto.ArenaListResponse
 import com.example.futsalmanager.domain.model.LocationModel
-import com.example.futsalmanager.domain.repository.AuthRepository
-import com.example.futsalmanager.domain.repository.HomeRepository
-import com.example.futsalmanager.domain.repository.LocationRepository
+import com.example.futsalmanager.domain.repository.IAuthRepository
+import com.example.futsalmanager.domain.repository.IHomeRepository
+import com.example.futsalmanager.domain.repository.ILocationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -15,10 +15,10 @@ import javax.inject.Singleton
 
 @Singleton
 class HomeUseCase @Inject constructor(
-    private val repo: HomeRepository,
-    private val location: LocationRepository,
+    private val repo: IHomeRepository,
+    private val location: ILocationRepository,
     @ApplicationScope private val appScope: CoroutineScope,
-    private val authRepo: AuthRepository
+    private val authRepo: IAuthRepository
 ) {
     val userFlow get() = authRepo.getUser
     val arenas = repo.getArenaListFromDB()

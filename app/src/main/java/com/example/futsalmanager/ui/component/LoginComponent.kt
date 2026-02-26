@@ -36,6 +36,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.example.futsalmanager.core.ui.sharedComposables.LoadingButton
+import com.example.futsalmanager.core.ui.sharedComposables.TextLabel
 import com.example.futsalmanager.ui.login.AuthIntent
 import com.example.futsalmanager.ui.login.AuthState
 

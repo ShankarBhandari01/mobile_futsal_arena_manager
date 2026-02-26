@@ -29,4 +29,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Futsal Manager"
 include(":app")
- 

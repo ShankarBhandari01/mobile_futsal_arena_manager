@@ -27,12 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.futsalmanager.ui.component.BannerState
-import com.example.futsalmanager.ui.component.GenericSegmentedToggle
+import com.example.futsalmanager.core.ui.states.BannerState
+import com.example.futsalmanager.core.ui.sharedComposables.GenericSegmentedToggle
 import com.example.futsalmanager.ui.component.LoginContent
 import com.example.futsalmanager.ui.component.RegisterContent
-import com.example.futsalmanager.ui.component.TermsText
-import com.example.futsalmanager.ui.component.TopMessageBanner
+import com.example.futsalmanager.core.ui.sharedComposables.TermsText
+import com.example.futsalmanager.core.ui.sharedComposables.TopMessageBanner
 import com.example.futsalmanager.ui.login.viewmodels.LoginRegisterViewModel
 import kotlinx.coroutines.delay
 

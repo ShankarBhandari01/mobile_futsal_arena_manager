@@ -170,7 +170,7 @@ class HomeViewModel @Inject constructor(
             HomeIntent.MyBookingClicked -> HomeEffect.NavigateToMyBooking
             HomeIntent.MyProfileClicked -> HomeEffect.NavigateToMyProfile
             HomeIntent.ConfirmLogout -> {
-                _state.update { it.copy(showLogoutDialog = false) }
+               // _state.update { it.copy(showLogoutDialog = false) }
                 HomeEffect.NavigateToLogin
             }
 

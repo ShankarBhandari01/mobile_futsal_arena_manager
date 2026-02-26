@@ -1,10 +1,10 @@
 package com.example.futsalmanager.data.remote.client
 
-import com.example.futsalmanager.core.utils.AuthHeaderPlugin
+import com.example.futsalmanager.core.plugins.AuthHeaderPlugin
 import com.example.futsalmanager.core.utils.NetworkConfig
-import com.example.futsalmanager.core.utils.TokenRefreshPlugin
-import com.example.futsalmanager.data.remote.api.AuthApi
-import com.example.futsalmanager.domain.session.SessionStorage
+import com.example.futsalmanager.core.plugins.TokenRefreshPlugin
+import com.example.futsalmanager.data.remote.api.IAuthApi
+import com.example.futsalmanager.domain.session.ISessionStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
@@ -21,8 +21,8 @@ object HttpClientFactory {
 
     fun create(
         tokenProvider: suspend () -> String?,
-        sessionStorage: SessionStorage,
-        getAuthApi: () -> AuthApi,
+        ISessionStorage: ISessionStorage,
+        getIAuthApi: () -> IAuthApi,
         onLogout: () -> Unit,
     ): HttpClient {
 
@@ -67,8 +67,8 @@ object HttpClientFactory {
                 this.tokenProvider = tokenProvider
             }
             install(TokenRefreshPlugin) {
-                this.sessionStorage = sessionStorage
-                this.getAuthApi = getAuthApi
+                this.ISessionStorage = ISessionStorage
+                this.getIAuthApi = getIAuthApi
                 this.onLogout = onLogout
             }
         }
