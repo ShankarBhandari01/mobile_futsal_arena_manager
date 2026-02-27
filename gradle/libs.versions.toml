@@ -83,4 +83,5 @@ google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version = "2.2.0" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 

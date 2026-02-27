@@ -1,0 +1,27 @@
+package com.example.feature_home.home
+
+import com.example.core_data.data.model.Arenas
+
+
+sealed interface HomeIntent {
+    data class ArenaClicked(val arena: Arenas) : HomeIntent
+    data class ViewModeChanged(val viewMode: ViewMode) : HomeIntent
+    data class SearchChanged(val query: String) : HomeIntent
+    data class DateChanged(val date: String) : HomeIntent
+    object MarketPlaceClicked : HomeIntent
+    object MyBookingClicked : HomeIntent
+    object MyProfileClicked : HomeIntent
+    object LogoutClicked : HomeIntent
+    object Refresh : HomeIntent
+    object EnableLocationClicked : HomeIntent
+    object DismissLogoutDialog : HomeIntent
+    object ConfirmLogout : HomeIntent
+    object LoadNextPage : HomeIntent
+
+    object OnPermissionsGranted : HomeIntent
+
+    object ScreenStarted : HomeIntent
+    object ScreenStopped : HomeIntent
+
+
+}

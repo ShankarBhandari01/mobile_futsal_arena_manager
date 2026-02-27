@@ -52,6 +52,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":core-data"))
+    implementation(project(":core-domain"))
+    implementation(project(":core-ui"))
+    implementation(project(":core-uitls"))
+    implementation(project(":feature-login"))
+    implementation(project(":feature-home"))
+
     // Google wallet
     implementation("com.google.android.gms:play-services-wallet:19.5.0")
     // Stops slf4j from scanning classpath on first use — fixes the  ANR
