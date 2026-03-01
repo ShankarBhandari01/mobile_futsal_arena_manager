@@ -1,9 +1,9 @@
 package com.example.core_data.data.remote.api.impl
 
 import com.example.core_data.data.remote.api.ApiRegistry
-import com.example.core_data.data.remote.api.IHomeApi
-import com.example.core_data.data.remote.dto.ArenaListResponse
 import com.example.core_data.data.remote.safe.safeApiCall
+import com.example.core_domain.domain.apis.IHomeApi
+import com.example.core_domain.domain.dto.ArenaListResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

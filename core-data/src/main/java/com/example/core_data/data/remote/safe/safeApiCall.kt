@@ -3,7 +3,7 @@ package com.example.core_data.data.remote.safe
 import android.util.Log
 import com.example.core_data.data.remote.api.apiExceptions.ApiException
 import com.example.core_data.data.remote.api.apiExceptions.ApiExceptionTypes
-import com.example.core_data.data.remote.dto.ApiError
+import com.example.core_domain.domain.dto.ApiError
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.statement.bodyAsText
@@ -18,10 +18,13 @@ suspend inline fun <T> safeApiCall(
     } catch (e: ClientRequestException) { // 4xx
         val errorMessage = try {
             val text = e.response.bodyAsText()
-            val apiError = Json.decodeFromString<ApiError>(text)
+            val apiError = Json.decodeFromString<com.example.core_domain.domain.dto.ApiError>(text)
             apiError
         } catch (ex: Exception) {
-            ApiError(error = "UNKNOWN", message = e.localizedMessage ?: "Client error")
+            com.example.core_domain.domain.dto.ApiError(
+                error = "UNKNOWN",
+                message = e.localizedMessage ?: "Client error"
+            )
         }
 
         val type = try {

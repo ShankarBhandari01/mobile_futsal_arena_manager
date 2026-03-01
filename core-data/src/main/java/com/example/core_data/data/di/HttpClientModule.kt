@@ -1,9 +1,9 @@
 package com.example.core_data.data.di
 
 import android.content.Context
-import com.example.core_data.data.remote.api.IAuthApi
+import com.example.core_domain.domain.apis.IAuthApi
 import com.example.core_data.data.remote.client.HttpClientFactory
-import com.example.core_data.data.session.ISessionStorage
+import com.example.core_domain.domain.session.ISessionStorage
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.Module

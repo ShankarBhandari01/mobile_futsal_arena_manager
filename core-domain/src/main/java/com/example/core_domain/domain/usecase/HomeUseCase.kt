@@ -1,11 +1,12 @@
 package com.example.core_domain.domain.usecase
 
-import com.example.core_data.data.di.ApplicationScope
-import com.example.core_data.data.model.LocationModel
-import com.example.core_data.data.remote.dto.ArenaListResponse
-import com.example.core_data.data.repository.IAuthRepository
-import com.example.core_data.data.repository.IHomeRepository
-import com.example.core_data.data.repository.ILocationRepository
+
+import com.example.core.ApplicationScope
+import com.example.core_domain.domain.dto.ArenaListResponse
+import com.example.core_domain.domain.model.LocationModel
+import com.example.core_domain.domain.repository.IAuthRepository
+import com.example.core_domain.domain.repository.IHomeRepository
+import com.example.core_domain.domain.repository.ILocationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn

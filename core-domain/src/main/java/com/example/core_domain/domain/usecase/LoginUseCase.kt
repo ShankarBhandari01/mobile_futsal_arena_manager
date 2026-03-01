@@ -1,10 +1,10 @@
 package com.example.core_domain.domain.usecase
 
 
-import com.example.core_data.data.remote.dto.ChangePasswordRequest
-import com.example.core_data.data.remote.dto.RegisterRequest
-import com.example.core_data.data.remote.dto.RegisterResponse
-import com.example.core_data.data.repository.IAuthRepository
+import com.example.core_domain.domain.dto.ChangePasswordRequest
+import com.example.core_domain.domain.dto.RegisterRequest
+import com.example.core_domain.domain.dto.RegisterResponse
+import com.example.core_domain.domain.repository.IAuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -29,6 +29,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Futsal Manager"
 include(":app")
+include(":core")
 include(":core-domain")
 include(":core-data")
 include(":feature-login")

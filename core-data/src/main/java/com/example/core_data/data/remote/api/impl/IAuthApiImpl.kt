@@ -1,16 +1,16 @@
 package com.example.core_data.data.remote.api.impl
 
 import com.example.core_data.data.remote.api.ApiRegistry
-import com.example.core_data.data.remote.api.IAuthApi
 import com.example.core_data.data.remote.client.plugins.TokenRefreshPlugin
-import com.example.core_data.data.remote.dto.ChangePasswordRequest
-import com.example.core_data.data.remote.dto.LoginRequest
-import com.example.core_data.data.remote.dto.LoginResponse
-import com.example.core_data.data.remote.dto.RefreshTokenResponse
-import com.example.core_data.data.remote.dto.RegisterRequest
-import com.example.core_data.data.remote.dto.RegisterResponse
-import com.example.core_data.data.remote.dto.ResetCodeResponse
 import com.example.core_data.data.remote.safe.safeApiCall
+import com.example.core_domain.domain.apis.IAuthApi
+import com.example.core_domain.domain.dto.ChangePasswordRequest
+import com.example.core_domain.domain.dto.LoginRequest
+import com.example.core_domain.domain.dto.LoginResponse
+import com.example.core_domain.domain.dto.RefreshTokenResponse
+import com.example.core_domain.domain.dto.RegisterRequest
+import com.example.core_domain.domain.dto.RegisterResponse
+import com.example.core_domain.domain.dto.ResetCodeResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post

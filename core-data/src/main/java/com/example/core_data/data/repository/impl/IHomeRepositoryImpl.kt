@@ -1,10 +1,10 @@
 package com.example.core_data.data.repository.impl
 
 import com.example.core_data.data.local.room.dao.IArenaDao
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.remote.api.IHomeApi
-import com.example.core_data.data.remote.dto.ArenaListResponse
-import com.example.core_data.data.repository.IHomeRepository
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.apis.IHomeApi
+import com.example.core_domain.domain.dto.ArenaListResponse
+import com.example.core_domain.domain.repository.IHomeRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +22,7 @@ class IHomeRepositoryImpl @Inject constructor(
         date: String,
         lat: Double?,
         lng: Double?
-    ): Result<ArenaListResponse> {
+    ): Result<com.example.core_domain.domain.dto.ArenaListResponse> {
         val response = api.getArenaListFromApi(
             search,
             offset,

@@ -1,7 +1,7 @@
 package com.example.core_data.data.di
 
 import com.example.core_data.data.local.session.ISessionDataStore
-import com.example.core_data.data.session.ISessionStorage
+import com.example.core_domain.domain.session.ISessionStorage
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

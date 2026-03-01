@@ -1,11 +1,15 @@
 package com.example.core_data.data.di
 
 import com.example.core_data.data.location.ILocationServiceImpl
-import com.example.core_data.data.repository.IBookingRepository
+import com.example.core_domain.domain.repository.IBookingRepository
 import com.example.core_data.data.repository.impl.IAuthRepositoryImpl
 import com.example.core_data.data.repository.impl.IBookingRepositoryImpl
 import com.example.core_data.data.repository.impl.IHomeRepositoryImpl
 import com.example.core_data.data.repository.impl.IPaymentRepositoryImpl
+import com.example.core_domain.domain.repository.IAuthRepository
+import com.example.core_domain.domain.repository.IHomeRepository
+import com.example.core_domain.domain.repository.ILocationRepository
+import com.example.core_domain.domain.repository.IPaymentRepository
 
 import dagger.Binds
 import dagger.Module
@@ -21,19 +25,19 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindAuthRepository(
         authRepositoryImpl: IAuthRepositoryImpl
-    ): com.example.core_data.data.repository.IAuthRepository
+    ): IAuthRepository
 
     @Binds
     @Singleton
     abstract fun bindHomeRepository(
         homeRepositoryImpl: IHomeRepositoryImpl
-    ): com.example.core_data.data.repository.IHomeRepository
+    ): IHomeRepository
 
     @Binds
     @Singleton
     abstract fun bindLocationRepository(
         locationServiceImpl: ILocationServiceImpl
-    ): com.example.core_data.data.repository.ILocationRepository
+    ): ILocationRepository
 
     @Binds
     @Singleton
@@ -45,5 +49,5 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindPaymentRepository(
         paymentRepositoryImpl: IPaymentRepositoryImpl
-    ): com.example.core_data.data.repository.IPaymentRepository
+    ): IPaymentRepository
 }

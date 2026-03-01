@@ -45,7 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.core_data.data.model.User
+import com.example.core_domain.domain.model.User
 import com.example.feature_home.home.HomeIntent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -155,7 +155,7 @@ fun FutsalDrawerSheet(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "${user.firstName ?: "No First Name"} ${user?.lastName ?: "No Last Name"}",
+                                text = "${user.firstName ?: "No First Name"} ${user.lastName ?: "No Last Name"}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )

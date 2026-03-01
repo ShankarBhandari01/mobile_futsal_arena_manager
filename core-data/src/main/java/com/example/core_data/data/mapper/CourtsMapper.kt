@@ -1,12 +1,12 @@
 package com.example.core_data.data.mapper
 
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.remote.dto.CourtDto
+import com.example.core_domain.domain.model.Courts
+import com.example.core_domain.domain.dto.CourtDto
 
 
 class CourtsMapper {
 
-    fun toDomain(dto: CourtDto, arenaId: String): Courts {
+    fun toDomain(dto: com.example.core_domain.domain.dto.CourtDto, arenaId: String): Courts {
         return Courts(
             id = dto.id,
             arenaId = arenaId,
@@ -20,8 +20,8 @@ class CourtsMapper {
         )
     }
 
-    fun toDto(domain: Courts): CourtDto {
-        return CourtDto(
+    fun toDto(domain: Courts): com.example.core_domain.domain.dto.CourtDto {
+        return com.example.core_domain.domain.dto.CourtDto(
             id = domain.id,
             name = domain.name,
             description = domain.description,

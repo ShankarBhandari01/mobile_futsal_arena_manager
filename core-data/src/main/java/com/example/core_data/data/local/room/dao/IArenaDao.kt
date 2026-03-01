@@ -6,9 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.example.core_data.data.model.ArenaWithCourts
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.model.Courts
+import com.example.core_domain.domain.model.ArenaWithCourts
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.model.Courts
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,13 +16,13 @@ interface IArenaDao {
 
     // Arena
     @Upsert
-    suspend fun upsertArena(arena: com.example.core_data.data.model.Arenas)
+    suspend fun upsertArena(arena: Arenas)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertArenas(arenas: List<com.example.core_data.data.model.Arenas>)
+    suspend fun insertArenas(arenas: List<Arenas>)
 
     @Query("SELECT * FROM Arenas WHERE id = :id")
-    fun getArenaById(id: String): Flow<com.example.core_data.data.model.Arenas?>
+    fun getArenaById(id: String): Flow<Arenas?>
 
     @Query("SELECT * FROM Arenas")
     fun getAllArenas(): Flow<List<Arenas>>
@@ -42,13 +42,13 @@ interface IArenaDao {
     suspend fun upsertCourts(courts: List<Courts>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCourts(courts: List<com.example.core_data.data.model.Courts>)
+    suspend fun insertCourts(courts: List<Courts>)
 
     @Query("SELECT * FROM Courts WHERE id = :id")
-    fun getCourtsById(id: String): Flow<com.example.core_data.data.model.Courts?>
+    fun getCourtsById(id: String): Flow<Courts?>
 
     @Query("SELECT * FROM Courts")
-    fun getAllCourts(): Flow<List<com.example.core_data.data.model.Courts>>
+    fun getAllCourts(): Flow<List<Courts>>
 
     @Query("DELETE FROM Courts")
     suspend fun clearAllCourts()
@@ -56,5 +56,5 @@ interface IArenaDao {
     // Arena + Courts relation
     @Transaction
     @Query("SELECT * FROM Arenas WHERE id = :id")
-    fun getArenaWithCourts(id: String): Flow<com.example.core_data.data.model.ArenaWithCourts>
+    fun getArenaWithCourts(id: String): Flow<ArenaWithCourts>
 }

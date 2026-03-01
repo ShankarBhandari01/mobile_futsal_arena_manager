@@ -1,13 +1,13 @@
 package com.example.feature_login.login.loginUtls
 
-import com.example.core_data.data.remote.dto.ChangePasswordRequest
-import com.example.core_data.data.remote.dto.RegisterRequest
+import com.example.core_domain.domain.dto.ChangePasswordRequest
+import com.example.core_domain.domain.dto.RegisterRequest
 import com.example.feature_login.login.AuthState
 import com.example.feature_login.login.password_reset.OtpPasswordResetState
 
 object LoginUtils {
-    fun AuthState.toRegisterRequest(): RegisterRequest {
-        return RegisterRequest(
+    fun AuthState.toRegisterRequest(): com.example.core_domain.domain.dto.RegisterRequest {
+        return _root_ide_package_.com.example.core_domain.domain.dto.RegisterRequest(
             firstName = this.firstName,
             lastName = this.lastName,
             email = this.email,
@@ -20,8 +20,8 @@ object LoginUtils {
         return this.length >= 8
     }
 
-    fun OtpPasswordResetState.toChangePasswordRequest(): ChangePasswordRequest {
-        return ChangePasswordRequest(
+    fun OtpPasswordResetState.toChangePasswordRequest(): com.example.core_domain.domain.dto.ChangePasswordRequest {
+        return _root_ide_package_.com.example.core_domain.domain.dto.ChangePasswordRequest(
             email = this.email,
             otp = this.otp,
             newPassword = this.password

@@ -85,9 +85,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.model.emum.Frequency
-import com.example.core_data.data.model.emum.PaymentStyle
+import com.example.core_domain.domain.model.Courts
+import com.example.core_domain.domain.model.emum.Frequency
+import com.example.core_domain.domain.model.emum.PaymentStyle
 import com.example.core_uitls.utils.Common
 import com.example.feature_home.home.viewModels.RecurringBookingViewModel
 import java.time.DayOfWeek

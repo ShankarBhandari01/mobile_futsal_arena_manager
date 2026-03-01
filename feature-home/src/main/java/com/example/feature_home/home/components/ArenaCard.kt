@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.core_data.data.model.Arenas
+import com.example.core_domain.domain.model.Arenas
 import com.example.core_uitls.utils.Common.shimmerEffect
 
 @Composable
@@ -85,7 +85,7 @@ fun ArenaCard(
                     )
 
                     Text(
-                        text = "ID: ${arena.id ?: "N/A"}",
+                        text = "ID: ${arena.id}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

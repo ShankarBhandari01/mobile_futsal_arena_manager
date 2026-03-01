@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.core_data.data.model.Courts
+import com.example.core_domain.domain.model.Courts
 import com.example.core_ui.component.sharedComposables.BookingHeading
 import com.example.feature_home.home.booking.BookingState
 import java.time.LocalDate

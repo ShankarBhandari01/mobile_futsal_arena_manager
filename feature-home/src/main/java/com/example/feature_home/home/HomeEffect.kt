@@ -1,6 +1,6 @@
 package com.example.feature_home.home
 
-import com.example.core_data.data.model.Arenas
+import com.example.core_domain.domain.model.Arenas
 
 
 sealed interface HomeEffect {

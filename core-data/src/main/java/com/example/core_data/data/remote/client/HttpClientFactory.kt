@@ -1,9 +1,9 @@
 package com.example.core_data.data.remote.client
 
-import com.example.core_data.data.remote.api.IAuthApi
+import com.example.core_domain.domain.apis.IAuthApi
 import com.example.core_data.data.remote.client.plugins.AuthHeaderPlugin
 import com.example.core_data.data.remote.client.plugins.TokenRefreshPlugin
-import com.example.core_data.data.session.ISessionStorage
+import com.example.core_domain.domain.session.ISessionStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest

@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.core_data.data.model.emum.PaymentMethod
+import com.example.core_domain.domain.model.emum.PaymentMethod
 import com.example.core_ui.component.sharedComposables.BookingHeading
 import com.example.feature_home.home.booking.BookingState
 

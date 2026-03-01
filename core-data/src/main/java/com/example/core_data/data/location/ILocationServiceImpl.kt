@@ -11,7 +11,8 @@ import android.os.HandlerThread
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
-import com.example.core_data.data.model.LocationModel
+import com.example.core_domain.domain.model.LocationModel
+import com.example.core_domain.domain.repository.ILocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -28,7 +29,7 @@ import javax.inject.Singleton
 class ILocationServiceImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val client: FusedLocationProviderClient
-) : com.example.core_data.data.repository.ILocationRepository {
+) : ILocationRepository {
 
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -58,7 +59,7 @@ class ILocationServiceImpl @Inject constructor(
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
-    override fun getLiveLocation(): Flow<com.example.core_data.data.model.LocationModel> =
+    override fun getLiveLocation(): Flow<LocationModel> =
         callbackFlow {
             val hasPermission = ContextCompat.checkSelfPermission(
                 context, ACCESS_FINE_LOCATION

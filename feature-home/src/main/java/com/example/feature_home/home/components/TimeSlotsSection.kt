@@ -29,9 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.core_data.data.model.Slot
-import com.example.core_data.data.model.emum.SlotStatus
-import com.example.core_data.data.model.emum.TimeSegment
+import com.example.core_domain.domain.model.Slot
+import com.example.core_domain.domain.model.emum.SlotStatus
+import com.example.core_domain.domain.model.emum.TimeSegment
 import com.example.core_ui.component.sharedComposables.BookingHeading
 import com.example.core_uitls.utils.Common.toDisplayTime
 import com.example.core_uitls.utils.Common.toHourInt

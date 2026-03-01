@@ -1,12 +1,11 @@
 package com.example.core_data.data.remote.api.impl
 
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.model.Slot
 import com.example.core_data.data.remote.api.ApiRegistry
-import com.example.core_data.data.remote.api.IBookingApi
-import com.example.core_data.data.remote.dto.CourtDto
 import com.example.core_data.data.remote.safe.safeApiCall
+import com.example.core_domain.domain.apis.IBookingApi
+import com.example.core_domain.domain.dto.CourtDto
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.model.Slot
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

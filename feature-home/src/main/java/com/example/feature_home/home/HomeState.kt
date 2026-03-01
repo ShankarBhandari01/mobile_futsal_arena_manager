@@ -1,7 +1,7 @@
 package com.example.feature_home.home
 
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.model.LocationModel
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.model.LocationModel
 
 data class HomeState(
     val viewMode: ViewMode = ViewMode.GRID,

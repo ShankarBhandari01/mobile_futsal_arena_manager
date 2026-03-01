@@ -1,9 +1,9 @@
 package com.example.feature_home.home.booking.recurringBooking
 
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.model.Slot
-import com.example.core_data.data.model.emum.Frequency
-import com.example.core_data.data.model.emum.PaymentStyle
+import com.example.core_domain.domain.model.Courts
+import com.example.core_domain.domain.model.Slot
+import com.example.core_domain.domain.model.emum.Frequency
+import com.example.core_domain.domain.model.emum.PaymentStyle
 import java.time.DayOfWeek
 import java.time.LocalTime
 

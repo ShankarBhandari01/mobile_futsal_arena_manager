@@ -1,11 +1,11 @@
 package com.example.core_data.data.remote.api.impl
 
 import com.example.core_data.data.remote.api.ApiRegistry
-import com.example.core_data.data.remote.api.IPaymentApi
-import com.example.core_data.data.remote.dto.PaymentIntentResponseDTO
-import com.example.core_data.data.remote.dto.ReservationRequestDTO
-import com.example.core_data.data.remote.dto.ReservationResponseDTO
 import com.example.core_data.data.remote.safe.safeApiCall
+import com.example.core_domain.domain.apis.IPaymentApi
+import com.example.core_domain.domain.dto.PaymentIntentResponseDTO
+import com.example.core_domain.domain.dto.ReservationRequestDTO
+import com.example.core_domain.domain.dto.ReservationResponseDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post

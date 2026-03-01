@@ -1,7 +1,7 @@
 package com.example.core_data.data.remote.client.plugins
 
-import com.example.core_data.data.remote.api.IAuthApi
-import com.example.core_data.data.session.ISessionStorage
+import com.example.core_domain.domain.apis.IAuthApi
+import com.example.core_domain.domain.session.ISessionStorage
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpClientPlugin

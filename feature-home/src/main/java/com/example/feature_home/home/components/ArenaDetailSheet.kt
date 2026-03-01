@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.core_data.data.model.Arenas
+import com.example.core_domain.domain.model.Arenas
 import org.osmdroid.util.GeoPoint
 
 /* ------------------------------------------------ */

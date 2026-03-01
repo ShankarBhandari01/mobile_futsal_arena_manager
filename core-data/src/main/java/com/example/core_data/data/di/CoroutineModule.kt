@@ -1,6 +1,7 @@
 package com.example.core_data.data.di
 
 
+import com.example.core.ApplicationScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

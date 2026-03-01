@@ -1,15 +1,9 @@
 package com.example.core_data.data.repository.impl
 
-import com.example.core_data.data.model.User
-import com.example.core_data.data.remote.api.IAuthApi
-import com.example.core_data.data.remote.dto.ChangePasswordRequest
-import com.example.core_data.data.remote.dto.LoginResponse
-import com.example.core_data.data.remote.dto.RefreshTokenResponse
-import com.example.core_data.data.remote.dto.RegisterRequest
-import com.example.core_data.data.remote.dto.RegisterResponse
-import com.example.core_data.data.remote.dto.ResetCodeResponse
-import com.example.core_data.data.repository.IAuthRepository
-import com.example.core_data.data.session.ISessionStorage
+import com.example.core_domain.domain.model.User
+import com.example.core_domain.domain.apis.IAuthApi
+import com.example.core_domain.domain.repository.IAuthRepository
+import com.example.core_domain.domain.session.ISessionStorage
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,13 +14,13 @@ class IAuthRepositoryImpl @Inject constructor(
     private val ISessionStorage: ISessionStorage
 ) : IAuthRepository {
 
-    override suspend fun login(email: String, password: String): Result<LoginResponse> {
+    override suspend fun login(email: String, password: String): Result<com.example.core_domain.domain.dto.LoginResponse> {
         val response = api.login(email, password)
         response.onSuccess { ISessionStorage.saveSession(it) }
         return response
     }
 
-    override suspend fun register(registerRequest: RegisterRequest): Result<RegisterResponse> {
+    override suspend fun register(registerRequest: com.example.core_domain.domain.dto.RegisterRequest): Result<com.example.core_domain.domain.dto.RegisterResponse> {
         return api.register(registerRequest)
     }
 
@@ -36,15 +30,15 @@ class IAuthRepositoryImpl @Inject constructor(
         return api.logout()
     }
 
-    override suspend fun refresh(refreshToken: String): Result<RefreshTokenResponse> {
+    override suspend fun refresh(refreshToken: String): Result<com.example.core_domain.domain.dto.RefreshTokenResponse> {
         return api.refresh(refreshToken)
     }
 
-    override suspend fun forgotPassword(email: String): Result<ResetCodeResponse> {
+    override suspend fun forgotPassword(email: String): Result<com.example.core_domain.domain.dto.ResetCodeResponse> {
         return api.forgotPassword(email)
     }
 
-    override suspend fun resetPassword(changePasswordRequest: ChangePasswordRequest): Result<Unit> {
+    override suspend fun resetPassword(changePasswordRequest: com.example.core_domain.domain.dto.ChangePasswordRequest): Result<Unit> {
         return api.resetPassword(changePasswordRequest)
     }
 

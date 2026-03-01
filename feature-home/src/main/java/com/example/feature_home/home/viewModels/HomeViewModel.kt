@@ -3,9 +3,9 @@ package com.example.feature_home.home.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.core_data.data.model.FilterParams
-import com.example.core_data.data.model.LocationModel
-import com.example.core_data.data.model.User
+import com.example.core_domain.domain.model.FilterParams
+import com.example.core_domain.domain.model.LocationModel
+import com.example.core_domain.domain.model.User
 import com.example.core_domain.domain.usecase.HomeUseCase
 import com.example.feature_home.home.HomeEffect
 import com.example.feature_home.home.HomeIntent

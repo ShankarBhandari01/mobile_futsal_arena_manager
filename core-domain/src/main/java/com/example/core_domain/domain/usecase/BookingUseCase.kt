@@ -1,11 +1,11 @@
 package com.example.core_domain.domain.usecase
 
-import com.example.core_data.data.model.Slot
-import com.example.core_data.data.remote.dto.ReservationRequestDTO
-import com.example.core_data.data.remote.dto.ReserveWithPaymentIntent
-import com.example.core_data.data.repository.IAuthRepository
-import com.example.core_data.data.repository.IBookingRepository
-import com.example.core_data.data.repository.IPaymentRepository
+import com.example.core_domain.domain.dto.ReservationRequestDTO
+import com.example.core_domain.domain.dto.ReserveWithPaymentIntent
+import com.example.core_domain.domain.model.Slot
+import com.example.core_domain.domain.repository.IAuthRepository
+import com.example.core_domain.domain.repository.IBookingRepository
+import com.example.core_domain.domain.repository.IPaymentRepository
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

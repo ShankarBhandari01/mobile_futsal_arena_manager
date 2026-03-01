@@ -75,8 +75,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.model.User
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.model.User
 import com.example.core_ui.component.sharedComposables.EmptyStateComponent
 import com.example.core_ui.component.sharedComposables.FutsalDatePickerField
 import com.example.core_ui.component.sharedComposables.GenericSegmentedToggle

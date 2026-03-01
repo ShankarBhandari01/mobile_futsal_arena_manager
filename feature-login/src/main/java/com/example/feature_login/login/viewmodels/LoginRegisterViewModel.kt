@@ -2,7 +2,7 @@ package com.example.feature_login.login.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.core_data.data.model.User
+import com.example.core_domain.domain.model.User
 import com.example.core_data.data.remote.api.apiExceptions.ApiException
 import com.example.core_data.data.remote.api.apiExceptions.ApiExceptionTypes
 import com.example.core_domain.domain.usecase.LoginUseCase

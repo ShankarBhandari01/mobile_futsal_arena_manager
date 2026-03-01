@@ -2,13 +2,13 @@ package com.example.core_data.data.repository.impl
 
 import com.example.core_data.data.local.room.dao.IArenaDao
 import com.example.core_data.data.mapper.CourtsMapper
-import com.example.core_data.data.model.ArenaWithCourts
-import com.example.core_data.data.model.Arenas
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.model.Slot
-import com.example.core_data.data.remote.api.IBookingApi
-import com.example.core_data.data.remote.dto.CourtDto
-import com.example.core_data.data.repository.IBookingRepository
+import com.example.core_domain.domain.model.ArenaWithCourts
+import com.example.core_domain.domain.model.Arenas
+import com.example.core_domain.domain.model.Courts
+import com.example.core_domain.domain.model.Slot
+import com.example.core_domain.domain.apis.IBookingApi
+import com.example.core_domain.domain.dto.CourtDto
+import com.example.core_domain.domain.repository.IBookingRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,7 +37,7 @@ class IBookingRepositoryImpl @Inject constructor(
         return api.getCourtSlots(subDomain, courtId, date, includeStatus)
     }
 
-    override suspend fun arenasSubDomainCourts(subDomain: String): Result<List<CourtDto>> {
+    override suspend fun arenasSubDomainCourts(subDomain: String): Result<List<com.example.core_domain.domain.dto.CourtDto>> {
         val arenaResult = api.arenaSubDomain(subDomain)
 
         arenaResult.onSuccess { arena ->

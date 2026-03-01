@@ -3,8 +3,8 @@ package com.example.feature_home.home.viewModels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.core_data.data.model.emum.PaymentMethod
-import com.example.core_data.data.remote.dto.ReservationRequestDTO
+import com.example.core_domain.domain.dto.ReservationRequestDTO
+import com.example.core_domain.domain.model.emum.PaymentMethod
 import com.example.core_domain.domain.usecase.BookingUseCase
 import com.example.core_uitls.utils.Common
 import com.example.core_uitls.utils.Common.toDisplayDate

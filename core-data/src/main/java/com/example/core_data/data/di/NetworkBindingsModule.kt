@@ -1,9 +1,9 @@
 package com.example.core_data.data.di
 
-import com.example.core_data.data.remote.api.IAuthApi
-import com.example.core_data.data.remote.api.IBookingApi
-import com.example.core_data.data.remote.api.IHomeApi
-import com.example.core_data.data.remote.api.IPaymentApi
+import com.example.core_domain.domain.apis.IAuthApi
+import com.example.core_domain.domain.apis.IBookingApi
+import com.example.core_domain.domain.apis.IHomeApi
+import com.example.core_domain.domain.apis.IPaymentApi
 import com.example.core_data.data.remote.api.impl.IAuthApiImpl
 import com.example.core_data.data.remote.api.impl.IBookingApiImpl
 import com.example.core_data.data.remote.api.impl.IHomeApiImpl

@@ -5,9 +5,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.core_data.data.remote.dto.LoginResponse
-import com.example.core_data.data.session.ISessionStorage
-import com.example.core_data.data.model.User
+import com.example.core_domain.domain.session.ISessionStorage
+import com.example.core_domain.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +36,7 @@ class ISessionDataStore @Inject constructor(
         val ARENA = stringPreferencesKey("arena")
     }
 
-    override suspend fun saveSession(response: LoginResponse) {
+    override suspend fun saveSession(response: com.example.core_domain.domain.dto.LoginResponse) {
         dataStore.edit { pref ->
             cachedToken = response.accessToken
 
@@ -82,9 +81,9 @@ class ISessionDataStore @Inject constructor(
         }
     }
 
-    override val userFlow: Flow<com.example.core_data.data.model.User?> = dataStore.data
+    override val userFlow: Flow<User?> = dataStore.data
         .map { pref ->
-            pref[Keys.USER]?.let { json.decodeFromString<com.example.core_data.data.model.User>(it) }
+            pref[Keys.USER]?.let { json.decodeFromString<User>(it) }
         }
         .distinctUntilChanged() // only emit if changed
 }

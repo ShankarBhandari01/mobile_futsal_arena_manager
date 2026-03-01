@@ -1,8 +1,8 @@
 package com.example.feature_home.home.booking
 
-import com.example.core_data.data.model.Courts
-import com.example.core_data.data.model.Slot
-import com.example.core_data.data.model.emum.PaymentMethod
+import com.example.core_domain.domain.model.Courts
+import com.example.core_domain.domain.model.Slot
+import com.example.core_domain.domain.model.emum.PaymentMethod
 import java.time.LocalDate
 
 sealed interface BookingIntent {
